@@ -25,16 +25,12 @@
 		  <li class="nav-item"> <a class="nav-link disabled" href="#">Settings</a> </li>
 	      <li class="nav-item dropdown"> <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown1" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"> username </a>
 	        <div class="dropdown-menu" aria-labelledby="navbarDropdown1"> <a class="dropdown-item" href="#">Send</a>
-				<a class="dropdown-item" href="#">Recieve</a>
+			  <a class="dropdown-item" href="#">Recieve</a>
 	          <div class="dropdown-divider"></div>
 	          <a class="dropdown-item" href="#">Logout</a> </div>
           </li>
 	      
         </ul>
-	    <form class="form-inline my-2 my-lg-0">
-	      <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
-	      <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
-        </form>
     </div>
   </nav>
 <div class="row">
@@ -139,7 +135,7 @@
 				</div>
 	        </div>
 		    <div class="text-center">
-		    <button type="submit" class="btn btn-outline-danger">Place Buy Order</button>
+		    <button type="submit" class="btn btn-outline-danger">Place Sell Order</button>
 			</div>
 	      </form>
 		        </div>
@@ -208,9 +204,11 @@
 		</div>
 			  </div>
 		  </div>
-		  <div class="col-lg-4">
-			  <header>Trade History</header>
-		    <table width="100%" border="1">
+		  <div class="col-lg-4 text-center">
+			  <h5 style="padding-top: 40px">TRADE HISTORY</h5>
+			  <div class="history">
+			  
+		    <table width="100%" class="history-table">
   <tbody>
     <tr>
       <th scope="col">DATE</th>
@@ -232,10 +230,11 @@
     </tr>
   </tbody>
 </table>
-		  </div>
+	</div>
+	</div>
 	  </div>
 </div>
-	<div class="text-center" style="padding-top: 30px; padding-bottom: 10px"><a href="http://www.otolux.la" target="_blank">Made in LA by OTOLUX</a></div>
+	<div class="text-center" style="padding-top: 30px; padding-bottom: 10px"></div>
 <script>
 	
     var historicPrice = document.getElementById('historicPrice').getContext('2d');
