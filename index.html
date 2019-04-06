@@ -15,18 +15,21 @@
 <body style="padding-top: 70px">
 <div class="container">
 	
-  <nav class="navbar navbar-dark navbar-custom fixed-top navbar-expand-lg"> <a class="navbar-brand" href="#">Navbar</a>
-	  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent1" aria-controls="navbarSupportedContent1" aria-expanded="false" aria-label="Toggle navigation"> <span class="navbar-toggler-icon"></span> </button>
+  <nav class="navbar navbar-dark navbar-custom fixed-top navbar-expand-lg"><a class="navbar-brand" href="#">dlux</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent1" aria-controls="navbarSupportedContent1" aria-expanded="false" aria-label="Toggle navigation"> <span class="navbar-toggler-icon"></span> </button>
 	  <div class="collapse navbar-collapse" id="navbarSupportedContent1">
 	    <ul class="navbar-nav mr-auto">
-	      <li class="nav-item active"> <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a> </li>
-	      <li class="nav-item"> <a class="nav-link" href="#">Link</a> </li>
-	      <li class="nav-item dropdown"> <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown1" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"> Dropdown </a>
-	        <div class="dropdown-menu" aria-labelledby="navbarDropdown1"> <a class="dropdown-item" href="#">Action</a> <a class="dropdown-item" href="#">Another action</a>
+	      <li class="nav-item active"> <a class="nav-link" href="#">Market<span class="sr-only">(current)</span></a></li>
+	      <li class="nav-item"> <a class="nav-link disabled" href="#">Inventory</a></li>
+		  <li class="nav-item"> <a class="nav-link disabled" href="#">Tools</a> </li>
+		  <li class="nav-item"> <a class="nav-link disabled" href="#">Settings</a> </li>
+	      <li class="nav-item dropdown"> <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown1" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"> username </a>
+	        <div class="dropdown-menu" aria-labelledby="navbarDropdown1"> <a class="dropdown-item" href="#">Send</a>
+				<a class="dropdown-item" href="#">Recieve</a>
 	          <div class="dropdown-divider"></div>
-	          <a class="dropdown-item" href="#">Something else here</a> </div>
+	          <a class="dropdown-item" href="#">Logout</a> </div>
           </li>
-	      <li class="nav-item"> <a class="nav-link disabled" href="#">Disabled</a> </li>
+	      
         </ul>
 	    <form class="form-inline my-2 my-lg-0">
 	      <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
@@ -84,11 +87,11 @@
 			
 	</div>
 	  <div class="col-lg-4">
-		  <div class="container-fluid">
-			  <div>&nbsp;</div>
-			  <header>BAL: 62382 DLUX</header>
+		  <div>
+			  <div>
+			  <div class="balance"><h4>BAL: 62382 DLUX</h4></div>
 			  <div class="widget">
-<ul id="orderwidget" class="nav nav-tabs" role="tablist">
+			<ul id="orderwidget" class="nav nav-tabs" role="tablist">
 	      <li class="nav-item"> <a class="nav-link active" href="#buy" id="buytab" role="tab" data-toggle="tab" aria-controls="buy" aria-expanded="true">Buy</a> </li>
 			    <li class="nav-item"> <a class="nav-link" href="#sell" role="tab" id="selltab" data-toggle="tab" aria-controls="sell">Sell</a> </li>
 		    </ul>
@@ -130,58 +133,58 @@
 			</div>
         </div>  
   </div>
-
+	</div>
 	<div class="row">
 	<div class="col-lg-8">
 	<canvas id="marketOrders" height="125" class="orderbook-chart"></canvas>
 	<div class="container orderbook-table">
-	  <div class="row">
+	  <div class="row text-center">
 		  <div class="col-lg-6">
-			  <header>Buy Orders</header>
-		  <table width="100%" border="1" >
+			  <h5 style="padding-top: 10px">BUY ORDERS</h5>
+		  <table width="100%">
   <tbody>
     <tr>
       <th scope="col">TOTAL</th>
       <th scope="col">QTY</th>
-      <th scope="col">BID PRICE</th>
+      <th scope="col">BID</th>
       <th scope="col">&nbsp;</th>
     </tr>
     <tr>
       <td>34513</td>
       <td>34513</td>
       <td>.22</td>
-      <td>Sell</td>
+      <td><button class="btn btn-outline-danger btn-sm" type="submit">Sell</button></td>
     </tr>
     <tr>
       <td>6826</td>
       <td>6826</td>
       <td>.21</td>
-      <td>Sell</td>
+      <td><button class="btn btn-outline-danger btn-sm" type="submit">Sell</button></td>
     </tr>
   </tbody>
 </table>
 		  </div>
 		  <div class="col-lg-6">
-			  <header>Sell Orders</header>
-		    <table width="100%" border="1">
+			  <h5 style="padding-top: 10px">SELL ORDERS</h5>
+		    <table width="100%">
   <tbody>
     <tr>
-      <th scope="col">&nbsp;</th>
-      <th scope="col">ASK PRICE</th>
-      <th scope="col">QTY</th>
       <th scope="col">TOTAL</th>
+      <th scope="col">QTY</th>
+      <th scope="col">ASK</th>
+      <th scope="col">&nbsp;</th>
     </tr>
     <tr>
-      <td>Buy</td>
-      <td>.23 </td>
       <td>7657</td>
-      <td>7657</td>
+      <td>7657 </td>
+      <td>.23</td>
+      <td><button class="btn btn-outline-success btn-sm" type="submit">Buy</button></td>
     </tr>
     <tr>
-      <td>Buy</td>
-      <td>.24 </td>
       <td>5632</td>
-      <td>5632</td>
+      <td>5632 </td>
+      <td>.24</td>
+      <td><button class="btn btn-outline-success btn-sm" type="submit">Buy</button></td>
     </tr>
   </tbody>
 </table>
@@ -216,6 +219,7 @@
 		  </div>
 	  </div>
 </div>
+	<div class="text-center" style="padding-top: 30px; padding-bottom: 10px"><a href="http://www.otolux.la" target="_blank">Made in LA by OTOLUX</a></div>
 <script>
 	
     var historicPrice = document.getElementById('historicPrice').getContext('2d');
