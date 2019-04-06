@@ -20,7 +20,6 @@ canvas {
 }
 .price-info {
 	background-color: #1B1B21;
-    padding-bottom: 20px;
 	border-radius: 20px;
 }
 .orderbook-chart {
@@ -47,3 +46,7 @@ canvas {
 }
 
 
+
+.market-info-item {
+	margin: 10px;
+}
