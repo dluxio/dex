@@ -99,17 +99,25 @@
 		    <div id="orderform" class="tab-content">
 			    <div role="tabpanel" class="tab-pane fade show active" id="buy" aria-labelledby="buytab">
 			      <form>
-	    <div class="form-group">
+	    	<div class="form-group">
 		      <label for="inputBuyPrice">Buy Price</label>
 		      <input type="text" class="form-control" id="buyPrice" placeholder="Amount in STEEM">
-			<input type="button" value="Lowest Ask">
-        </div>
+			<div class="text-center" style="padding: 10px">
+				<button type="button" class="btn btn-outline-primary btn-sm">Lowest Ask</button>
+			</div>
+        	</div>
 		    <div class="form-group">
 		      <label for="inputBuyQty">Buy Qty.</label>
 		      <input type="text" class="form-control" id="buyQty" placeholder="How many">
-			  <input type="button" value="Max"> <input type="button" value="1/2"> <input type="button" value="1/4">	
+				<div class="text-center" style="padding: 10px">
+				<button type="button" class="btn btn-outline-primary btn-sm">Max</button>
+				<button type="button" class="btn btn-outline-primary btn-sm">1/2</button>
+				<button type="button" class="btn btn-outline-primary btn-sm">1/4</button>
+				</div>
 	        </div>
-		    <button type="submit" class="btn btn-primary">Place Buy Order</button>
+			<div class="text-center">
+		    <button type="submit" class="btn btn-outline-success">Place Buy Order</button>
+			</div>
 	      </form>
 		        </div>
 			    <div role="tabpanel" class="tab-pane fade" id="sell" aria-labelledby="selltab">
@@ -117,14 +125,22 @@
 	    <div class="form-group">
 		      <label for="inputSellPrice">Sell Price</label>
 		      <input type="text" class="form-control" id="sellPrice" placeholder="Amount in STEEM">
-			<input type="button" value="Highest Ask">
+			<div class="text-center" style="padding: 10px">
+				<button type="button" class="btn btn-outline-primary btn-sm">Highest Bid</button>
+			</div>
         </div>
 		    <div class="form-group">
 		      <label for="inputSellQty">Sell Qty.</label>
 		      <input type="text" class="form-control" id="sellQty" placeholder="How many">
-			  <input type="button" value="Max"> <input type="button" value="1/2"> <input type="button" value="1/4">	
+			  <div class="text-center" style="padding: 10px">
+				<button type="button" class="btn btn-outline-primary btn-sm">Max</button>
+				<button type="button" class="btn btn-outline-primary btn-sm">1/2</button>
+				<button type="button" class="btn btn-outline-primary btn-sm">1/4</button>
+				</div>
 	        </div>
-		    <button type="submit" class="btn btn-primary">Place Sell Order</button>
+		    <div class="text-center">
+		    <button type="submit" class="btn btn-outline-danger">Place Buy Order</button>
+			</div>
 	      </form>
 		        </div>
 			   
