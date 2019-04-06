@@ -39,13 +39,23 @@
 		<div class="price-info">
 		<canvas id="historicPrice" height="250" class="price-chart"></canvas>
 		<div class="d-flex justify-content-center">
-		  <div class="btn-group set-timescale" role="group">
-			  <button type="button" class="btn btn-secondary active">1H</button>
-			  <button type="button" class="btn btn-secondary">1D</button>
-			  <button type="button" class="btn btn-secondary">1W</button>
-			  <button type="button" class="btn btn-secondary">1M</button>
-			  <button type="button" class="btn btn-secondary">1Y</button>
-		  </div>
+		  <div class="btn-group btn-group-toggle set-timescale" data-toggle="buttons">
+  				<label class="btn btn-primary active">
+    				<input type="radio" name="options" id="hour" autocomplete="off" checked> 1H
+  				</label>
+  				<label class="btn btn-primary">
+    				<input type="radio" name="options" id="day" autocomplete="off"> 1D
+  				</label>
+  				<label class="btn btn-primary">
+    			<input type="radio" name="options" id="week" autocomplete="off"> 1W
+  				</label>
+			  	<label class="btn btn-primary">
+    			<input type="radio" name="options" id="month" autocomplete="off"> 1M
+  				</label>
+			  	<label class="btn btn-primary">
+    			<input type="radio" name="options" id="year" autocomplete="off"> 1Y
+  				</label>
+			</div>
 			</div>
 		<div class="d-flex justify-content-center">
 			<div class="text-center market-info-item">
@@ -71,9 +81,9 @@
 		  </div>
 			
 		  </div>
-		<canvas id="marketOrders" height="125" class="orderbook-chart"></canvas>	
+			
 	</div>
-	    <div class="col-lg-4">
+	  <div class="col-lg-4">
 		  <div class="container-fluid">
 			  <div>&nbsp;</div>
 			  <header>BAL: 62382 DLUX</header>
@@ -118,14 +128,12 @@
 		    </div>
 		  </div>
 			</div>
-        </div>
+        </div>  
   </div>
-    
-    
-</div>
-<div class="container">
-	  <div class="row">
-		  <div class="col-lg-8">
+
+	<div class="row">
+	<div class="col-lg-8">
+	<canvas id="marketOrders" height="125" class="orderbook-chart"></canvas>
 	<div class="container orderbook-table">
 	  <div class="row">
 		  <div class="col-lg-6">
@@ -210,15 +218,14 @@
 </div>
 <script>
 	
-    let historicPrice = document.getElementById('historicPrice').getContext('2d');
-	
+    var historicPrice = document.getElementById('historicPrice').getContext('2d');
 	
     // Global Options
     Chart.defaults.global.defaultFontFamily = 'Helvetica';
     Chart.defaults.global.defaultFontSize = 18;
     Chart.defaults.global.defaultFontColor = '#FFF';
 
-    let priceChart = new Chart(historicPrice, {
+    var priceChart = new Chart(historicPrice, {
 		
       type:'line', // bar, horizontalBar, pie, line, doughnut, radar, polarArea
       data:{
@@ -286,9 +293,16 @@
       }
     });
 
-    let marketOrders = document.getElementById('marketOrders').getContext('2d');
-
-    let buySellChart = new Chart(marketOrders, {
+    var marketOrders = document.getElementById('marketOrders').getContext('2d');
+	var gradientGrn = marketOrders.createLinearGradient(0, 0, 0, 400);
+	gradientGrn.addColorStop(0, 'rgba(90, 216, 154, 1)');   
+	gradientGrn.addColorStop(1, 'rgba(90, 216, 154, 0)');
+	
+	var gradientRed = marketOrders.createLinearGradient(0, 0, 0, 400);
+	gradientRed.addColorStop(0, 'rgba(226, 94, 94, 1)');   
+	gradientRed.addColorStop(1, 'rgba(226, 94, 94, 0)');
+	
+    var buySellChart = new Chart(marketOrders, {
       type:'bar', // bar, horizontalBar, pie, line, doughnut, radar, polarArea
       data:{
         labels:['Boston', 'Worcester', 'Springfield', 'Lowell', 'Cambridge', 'New Bedford'],
@@ -302,24 +316,13 @@
             22.35,
             22.36
           ],
-		  
-          //backgroundColor:'green',
-          backgroundColor:[
-            'rgba(255, 99, 132, 0.6)',
-            'rgba(54, 162, 235, 0.6)',
-            'rgba(255, 206, 86, 0.6)',
-            'rgba(75, 192, 192, 0.6)',
-            'rgba(153, 102, 255, 0.6)',
-            'rgba(255, 159, 64, 0.6)',
-            'rgba(255, 99, 132, 0.6)'
-          ],
-          borderWidth:1,
-          borderColor:'#777',
-          hoverBorderWidth:3,
-          hoverBorderColor:'#000'
+          backgroundColor:[gradientGrn, gradientGrn, gradientGrn, gradientRed, gradientRed, gradientRed],
+		  hoverBackgroundColor:[gradientGrn, gradientGrn, gradientGrn, gradientRed, gradientRed, gradientRed],
+          hoverBorderWidth:2,
+          hoverBorderColor:'#FFCE00'
         }]
       },
-      options:{
+      options:{	
         title:{
           display:true,
           text:'ORDER BOOK',
@@ -329,7 +332,7 @@
           display:false,
           position:'right',
           labels:{
-            fontColor:'#000'
+          fontColor:'#000'
           }
         },
         layout:{
@@ -354,7 +357,8 @@
 			}],
 			yAxes: [{
 				ticks: {
-                    display: false //removes the label
+                    display: false, //removes the label
+					beginAtZero:false
                 },
 				gridLines: {
 					display: false
