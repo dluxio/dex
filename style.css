@@ -57,6 +57,12 @@ td {
 .market-info-item {
 	margin: 10px;
 }
+.market-info-item h3 {
+	font-size: 1.8em;
+}
+.market-info-item label {
+	font-size: .8em;
+}
 .balance {
 	text-align: center;
 	padding-top: 20px;
