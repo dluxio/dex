@@ -43,11 +43,12 @@ td {
     border-bottom-right-radius: 20px;
 }
 .widget {
+	margin-top: 20px;
     background-color: #191919;
     border-radius: 20px;
-    padding-top: 20px;
+    padding-top: 10px;
     padding-right: 20px;
-    padding-bottom: 20px;
+    padding-bottom: 10px;
     padding-left: 20px;	
 }
 .set-timescale {
