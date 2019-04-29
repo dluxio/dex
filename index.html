@@ -13,21 +13,22 @@
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
   <title>dlux DEX</title>
 </head>
-<body style="padding-top: 70px">
-<div class="container">
+<body id="top">
+<div class="container" style="padding-top: 70px">
 	
   <nav class="navbar navbar-dark navbar-custom fixed-top navbar-expand-lg justify-content-end">
 	 <a class="navbar-brand" href="https://dlux.io" target="_blank">dlux</a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent1" aria-controls="navbarSupportedContent1" aria-expanded="false" aria-label="Toggle navigation"> <span class="navbar-toggler-icon"></span> </button>
 	  <div class="collapse navbar-collapse" id="navbarSupportedContent1">
     <form class="form-inline">
-    <button class="btn btn-outline-danger" type="button" href="https://dlux-vr.glitch.me/build.html" target="_blank">Start Building</button>
-    <button class="btn btn-outline-primary" type="button" href="https://dlux.io/vr">Explore XR</button>
-	<div class="dropdown show"> <button class="btn btn-outline-info dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"> Learn More </button>
+    <a href="https://dlux.io/vr" target="_blank"><button class="btn btn-outline-primary ml-2" type="button">Explore XR</button></a>
+	<a href="https://dlux-vr.glitch.me/build.html" target="_blank"><button class="btn btn-outline-danger ml-2" type="button">Start Building</button></a>
+	<div class="dropdown show"> <button class="btn btn-outline-info dropdown-toggle ml-2" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"> More Info </button>
 	    <div class="dropdown-menu">
 	      <a class="dropdown-item" href="https://docs.google.com/presentation/d/1L0ZhqUsetBB2jI8fcHqUIOt7ddDKFtn4VV_C2-Uogcw/" target="_blank">Slide Deck</a> <a class="dropdown-item" href="https://docs.google.com/document/d/1_jHIJsX0BRa5ujX0s-CQg3UoQC2CBW4wooP2lSSh3n0/" target="_blank">White Paper</a>
 		  <a class="dropdown-item" href="https://github.com/dluxio/dluxio/wiki" target="_blank">GitHub Wiki</a> 
 	      <div class="dropdown-divider"></div>
+		  <a class="dropdown-item" href="https://steempeak.com/@dlux-io" target="_blank">STEEM Blog</a>
 		  <a class="dropdown-item" href="https://discord.gg/Beeb38j" target="_blank">Discord Server</a>
 		  <a class="dropdown-item" href="https://dlux.tokenbb.io/" target="_blank">Community BB</a>
 		</div>
@@ -61,15 +62,15 @@
 	  <!-- Content Panel -->
 	  <div id="pagecontent" class="tab-content">
 		 <div role="tabpanel" class="tab-pane fade show" id="info" aria-labelledby="infotab">
-			<div class="container-fluid" style="padding:0"> 
-				  <div id="carouselExampleIndicators1" class="carousel slide rounded" data-ride="carousel" style="background-color: grey;">
-				    <ol class="carousel-indicators rounded">
+		   <div class="container-fluid" style="padding:0"> 
+				  <div id="carouselExampleIndicators1" class="carousel slide" data-ride="carousel" style="background-color: grey; margin-bottom:20px;">
+				    <ol class="carousel-indicators">
 				      <li data-target="#carouselExampleIndicators1" data-slide-to="0" class="active"></li>
 				      <li data-target="#carouselExampleIndicators1" data-slide-to="1"></li>
 				      <li data-target="#carouselExampleIndicators1" data-slide-to="2"></li>
 			        </ol>
-				    <div class="carousel-inner rounded" role="listbox">
-				      <div class="carousel-item active rounded"> <img class="d-block mx-auto" src="images/token.jpg" alt="First slide">
+				    <div class="carousel-inner" role="listbox">
+				      <div class="carousel-item active"> <img class="d-block mx-auto" src="images/token.jpg" alt="First slide">
 				        <div class="carousel-caption">
 				          <h5>DLUX ICO</h5>
 				          <p>Buy DLUX token now!</p>
@@ -88,19 +89,45 @@
 			            </div>
 			          </div>
 			        </div>
-				    <a class="carousel-control-prev rounded" href="#carouselExampleIndicators1" role="button" data-slide="prev"> <span class="carousel-control-prev-icon rounded" aria-hidden="true"></span> <span class="sr-only">Previous</span></a> <a class="carousel-control-next rounded" href="#carouselExampleIndicators1" role="button" data-slide="next"> <span class="carousel-control-next-icon rounded" aria-hidden="true"></span> <span class="sr-only">Next</span></a></div>
-				  <div style="padding: 5px;">&nbsp;</div>
-				  <div class="jumbotron" style="background-color:#0F1F28; margin-bottom:20px;">
-	  <h1 class="display-4">dlux</h1>
-	  <p class="lead">dlux (decentralized limitless user experiences) is the first platform anyone can use to make and monetize anything.</p>
-	  <hr class="my-4" style="background-color:#fff">
-	  <p>It empowers the spatial web with tokenization and crypto rewards. Join us in the metaverse today!</p>
-	  <div class="btn-toolbar" role="toolbar"><a class="btn btn-primary btn-lg mr-2" href="https://dlux.io/vr" role="button" target="_blank">Explore Now</a> <a class="btn btn-danger btn-lg mr-2" href="https://dlux-vr.glitch.me/build.html" role="button" target="_blank">Start Building</a> 
-	  <div class="dropdown show"> <a class="btn btn-lg dropdown-toggle btn-outline-info" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"> Learn More </a>
-	    <div class="dropdown-menu">
-	      <a class="dropdown-item" href="https://github.com/dluxio/dluxio/wiki" target="_blank">GitHub Wiki</a> <a class="dropdown-item" href="https://docs.google.com/presentation/d/1L0ZhqUsetBB2jI8fcHqUIOt7ddDKFtn4VV_C2-Uogcw/" target="_blank">Slide Deck</a> <a class="dropdown-item" href="https://docs.google.com/document/d/1_jHIJsX0BRa5ujX0s-CQg3UoQC2CBW4wooP2lSSh3n0/" target="_blank">White Paper</a>
-	      <div class="dropdown-divider"></div>
-		<a class="dropdown-item" href="https://discord.gg/Beeb38j" target="_blank">Discord Server</a> </div></div></div></div>
+				    <a class="carousel-control-prev" href="#carouselExampleIndicators1" role="button" data-slide="prev"> <span class="carousel-control-prev-icon" aria-hidden="true"></span> <span class="sr-only">Previous</span></a> <a class="carousel-control-next" href="#carouselExampleIndicators1" role="button" data-slide="next"> <span class="carousel-control-next-icon" aria-hidden="true"></span> <span class="sr-only">Next</span></a></div>
+                  
+                  <div class="row">
+                    <div class="col-xl-4">
+                      <div class="card" style="margin-bottom:20px;"> <img class="card-img-top" src="images/metaverse.jpg" alt="Card image cap">
+                        <div class="card-body" style="background:#1B1717">
+                          <h5 class="card-title">New Internet</h5>
+                          <p class="card-text">dlux decentralizes the spatial web to create the ultimate social app publishing platform</p>
+                          <a href="https://dlux.io/vr" class="btn btn-primary">Explore the Metaverse</a></div>
+                      </div>
+                    </div>
+                    <div class="col-xl-4">
+                      <div class="card" style="margin-bottom:20px;"> <img class="card-img-top" src="images/builder-2.jpg" alt="Card image cap">
+                        <div class="card-body" style="background:#1B1717">
+                          <h5 class="card-title">XR Builder</h5>
+                          <p class="card-text">Build AR and VR experiences right in your web browser, without downloading any software</p>
+                          <a href="https://dlux-vr.glitch.me/build.html" class="btn btn-danger">Build the Metaverse</a></div>
+                      </div>
+                    </div>
+                    <div class="col-xl-4">
+                      <div class="card" style="margin-bottom:20px;"> <img class="card-img-top" src="images/dlux-token.jpg" alt="Card image cap">
+                        <div class="card-body" style="background:#1B1717">
+                          <h5 class="card-title">DLUX Token</h5>
+                          <p class="card-text">Peer-to-peer trading, in-game transactions, and smart contracts on the dlux DAO</p>
+                          <a class="btn btn-warning" href="#top">Own the Metaverse</a></div>
+                      </div>
+                    </div>
+                  </div>
+                 <div class="jumbotron" style="background-color:#0F1F28; margin-bottom:20px;">
+                    <h1 class="display-4">decentralized limitless user experiences</h1>
+                    <p class="lead">dlux is an open-source, fully decentralized asset platform on the STEEM blockchain.</p>
+                    <hr class="my-4" style="background-color:#fff">
+                    <p>Make and monetize anything - dlux empowers the spatial web with tokenization and crypto rewards. Join us in the metaverse today!</p>
+                    <div class="btn-toolbar" role="toolbar">
+						<a class="btn btn-outline-light mr-2" href="https://dlux.io/vr" role="button" target="_blank">Slide Deck</a>
+						<a class="btn btn-outline-light mr-2" href="https://dlux-vr.glitch.me/build.html" role="button" target="_blank">White Paper</a>
+                        <a class="btn btn-outline-light mr-2" href="https://discord.gg/Beeb38j" target="_blank">Discord Server</a>
+                      </div>
+                    </div>
 </div>
   </div>
 	    <div role="tabpanel" class="tab-pane fade show active" id="steem" aria-labelledby="steemtab">
