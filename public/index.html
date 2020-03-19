@@ -1,0 +1,188 @@
+<html>
+  <head>
+    <title>dlux</title>
+     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.1/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/steem/dist/steem.min.js"></script>
+    <script src="https://unpkg.com/ipfs-http-client@29.1.1/dist/index.min.js"></script>
+    <style>
+      html, body{
+      margin: 0;
+      height: 100%;
+      }
+      iframe{
+      border: 0;
+      display:inline-block;
+      }
+    </style>
+    <script>
+      steem.api.getContent('markegiles', 'z67rwq0di4qv7egjx7dma81xjkv2jt87', function(err, result) { 
+      console.log(result)
+      srchost = 'https://glitch.com/edit/#!/' + window.location.host.split( '.' )[0]
+      var postKey = 'markegiles/z67rwq0di4qv7egjx7dma81xjkv2jt87'
+      var metadata = result.json_metadata
+      var VRhash = JSON.parse(metadata).vrHash //how dlux loads content
+      var iframe = document.createElement('iframe');
+      iframe.id = 'theIframe'
+      iframe.allowfullscreen = 'yes'
+      iframe.scrolling = 'yes'
+      iframe.width = '100%'
+      iframe.height = '100%'
+      iframe.align = 'right'
+      iframe.setAttribute('allowfullscreen', true)
+      iframe.setAttribute('allow', 'gyroscope; accelerometer; microphone;')
+      iframe.src = '/post.html' // 'https://ipfs.io/ipfs/' + VRhash
+      document.body.appendChild(iframe);
+      })
+    </script>
+    <script>
+      
+      //ios polyfill for motion
+      function isIOS() {
+      return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+      }
+      function cloneDeviceMotionEvent(e) {
+      return {
+      acceleration: {
+      x: e.acceleration.x,
+      y: e.acceleration.y,
+      z: e.acceleration.z,
+      },
+      accelerationIncludingGravity: {
+      x: e.accelerationIncludingGravity.x,
+      y: e.accelerationIncludingGravity.y,
+      z: e.accelerationIncludingGravity.z,
+      },
+      rotationRate: {
+      alpha: e.rotationRate.alpha,
+      beta: e.rotationRate.beta,
+      gamma: e.rotationRate.gamma,
+      },
+      interval: e.interval,
+      timeStamp: e.timeStamp
+      };
+      }
+      
+      //Iframe messaging
+      if (window.addEventListener) {
+      window.addEventListener("message", onMessage, false);
+      }
+      else if (window.attachEvent) {
+      window.attachEvent("onmessage", onMessage, false);
+      }
+      function onMessage(event) {
+      //if (event.origin !== "https://cheerful-suggestion.glitch.me") return;
+      var data = event.data;
+      if (typeof(window[data.func]) == "function") {
+      window[data.func].call(null, data.message);
+      }
+      }
+      
+      //loopback for blockchain messaging
+      function vote(message) {
+      var target = document.getElementById('theIframe').contentWindow
+      target.postMessage({
+      'func': 'voteMsg',
+      'message': 'you sent Vote()'
+      }, "*");
+      }
+      
+      function reqsign(op){
+      if(window.steem_keychain){
+      steem_keychain.requestBroadcast(op[1][1], [op[0]], op[1][0], function(response) {
+      console.log(response);
+      var target = document.getElementById('theIframe').contentWindow
+      target.postMessage({
+      'func': 'keychainResponse',
+      'message': response
+      }, "*");
+      });
+      }
+      }
+      function reqsignescrow(ip){
+      steem.broadcast.escrowTransfer(ip[0], ip[1], ip[2], ip[3], ip[4], ip[5], ip[6], ip[7], ip[8], ip[9], ip[10], function(err, result) {
+      console.log(err, result);
+      });
+      }
+      function escrow_transfer(ip1,ip2,ip3,ip4,ip5,ip6,ip7,ip8,ip9,ip10,ip11){
+      console.log(steem)
+      steem.broadcast.escrowTransfer(ip1, ip2, ip3, ip4, ip5, ip6, ip7, ip8, ip9, ip10, ip11, function(err, result) {
+        console.log(err, result);
+      });
+    }
+      function aVote(message) {
+      var target = document.getElementById('theIframe').contentWindow
+      target.postMessage({
+      'func': 'voteMsg',
+      'message': 'you sent aVote(' + message + ')'
+      }, "*");
+      }
+      function uploadNMIPFS (event){
+        const ipfs = window.IpfsHttpClient({ host: 'ipfs.infura.io', port: 5001, protocol: 'https'})
+      const ipfsIP = [{'path':'navmesh.glb','content':ipfs.Buffer.from(event.content, 'ascii')}]
+    ipfs.add(ipfsIP, (err, ipfsReturn) => {
+            if (!err){
+              var p = localStorage.getItem('pass')
+              fetch(`/glb/${p}`, {
+                method: 'POST',
+                headers: {
+            "Content-Type": "application/json",
+            // "Content-Type": "application/x-www-form-urlencoded",
+        },
+                body: JSON.stringify({customJson:{assets:[{asset:ipfsReturn[0],pin:true}]}})
+              })
+              .then(response => response.text())
+              .then(response => console.log('Updated!'))
+              .catch(error => console.error('Error:', error));
+            } else {
+        console.log('triggered')}
+          });
+      }
+      // handles links for site navigation
+      function sendLink(link) {
+      // location.href = link; effectively what happen - the rest is a loopback
+      var target = document.getElementById('theIframe').contentWindow
+      target.postMessage({
+      'func': 'voteMsg',
+      'message': 'You sent' + link
+      }, "*");
+      }
+      
+      //wait for content to load to pass state information, "iterate" means it's working
+      var postable = false
+      function iloaded(){
+      if (isIOS()) {
+      window.addEventListener('devicemotion', function(e) {
+      document.getElementById('theIframe').contentWindow.postMessage({
+      type: 'devicemotion',
+      deviceMotionEvent: cloneDeviceMotionEvent(e),
+      }, '*');
+      });
+      }
+      
+        steem.api.getContent('markegiles', 'dlux-vr-tutorial-sm-test', function(err, result) {
+      var target = document.getElementById('theIframe').contentWindow
+      if(localStorage.getItem('un')){un = localStorage.getItem('un')}
+      var un = prompt('Enter STEEM username','disregardfiat')
+      target.postMessage({
+      'func': 'iAm',
+      'message': un,
+      }, "*");
+      target.postMessage({
+      'func': 'key',
+      'message': 'markegiles/dlux-vr-tutorial-sm-test',
+      }, "*");
+      target.postMessage({
+      'func': 'steemState',
+      'message': result,
+      }, "*");
+      })
+          if(window.steem_keychain) {
+            postable = true
+        }
+      }
+    </script>
+    <body></body>
+  </head>
+</html>

@@ -1,0 +1,40 @@
+{
+  "name": "dlux-ide",
+  "version": "1.0.0",
+  "description": "An IDE for building AFRAME dApps with no coding",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://api.glitch.com/dlux-vr/git"
+  },
+  "keywords": [
+    "aframevr",
+    "aframe",
+    "webvr",
+    "webxr",
+    "steem",
+    "ipfs",
+    "steem-keychain"
+  ],
+  "author": "Steven Ettinger <sjettingerjr@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://discord.gg/Beeb38j"
+  },
+  "homepage": "https://glitch.com/edit/#!/dlux-vr",
+  "dependencies": {
+    "body-parser": "^1.18.3",
+    "browserify-middleware": "^8.1.1",
+    "chai": "^4.2.0",
+    "cors": "^2.8.5",
+    "drag-drop": "^4.2.0",
+    "express": "^4.16.4",
+    "glob": "^7.1.3",
+    "ipfs-http-client": "^29.1.1",
+    "networked-aframe": "^0.6.1",
+    "png-to-jpeg": "^1.0.1"
+  }
+}

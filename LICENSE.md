@@ -1,6 +1,8 @@
 MIT License
 
-Copyright (c) 2019 Decentralized Limitless User eXperiences
+Copyright (c) 2018  
+* Steven Ettinger | @disregardfiat
+* Mark Giles | @markegiles
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

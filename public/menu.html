@@ -1,0 +1,252 @@
+<html>
+ <head>
+   <script>
+    var perIPFS=0,perCJ =0
+    fetch(`/postdata`)
+        .then(function(response) {
+          return response.json();
+        })
+        .then(function(pd) {
+        perCJ = parseInt(JSON.stringify(pd,null,'').length *100/64000)
+        for (var i = 0; i < pd.customJson.assets.length;i++){
+           if(pd.customJson.assets[i].pin)perIPFS += pd.customJson.assets[i].size
+        }
+        perIPFS = parseInt(perIPFS*100 / 134217728)
+        console.log({perIPFS,perCJ})
+    })
+    
+    function showmenu(){
+      window.parent.postMessage({
+        'func': 'showmenu',
+        'message': ''
+    }, "*");
+    }
+    function uploader() {
+      window.parent.postMessage({
+        'func': 'loadUp',
+        'message': ''
+    }, "*");
+    }
+    function info() {
+      update();
+    }
+    function update() {
+      window.parent.postMessage({
+        'func': 'update',
+        'message': ''
+    }, "*");
+    }
+    function hidemenu() {
+      window.parent.postMessage({
+        'func': 'hidemenu',
+        'message': ''
+    }, "*");
+    }
+    function postApp() {
+      if(perCJ>99){alert('CustomJSON is too large to post');return;}
+      if(perIPFS>99){alert('You are requesting to pin more than 100MB, please set some pins to false... users will likely not load a 100MB app anyway');return}
+      window.parent.postMessage({
+        'func': 'postApp',
+        'message': ''
+    }, "*");
+    }
+    function apploader() {
+      window.parent.postMessage({
+        'func': 'loadGlb',
+        'message': ''
+    }, "*");
+    }
+    function imgloader() {
+      window.parent.postMessage({
+        'func': 'loadimg',
+        'message': ''
+    }, "*");
+    }
+    function postloader() {
+      window.parent.postMessage({
+        'func': 'loadPost',
+        'message': ''
+    }, "*");
+    }
+    function glitchloader() {
+      window.parent.postMessage({
+        'func': 'loadGlitch',
+        'message': ''
+    }, "*");
+    }
+    function refreshglitch() {
+      window.parent.postMessage({
+        'func': 'refreshGlitch',
+        'message': ''
+    }, "*");
+    }
+    </script>
+   <style type="text/css">
+       body {
+            background-color: #393D49;   
+       }
+      .logo:hover
+       {
+      cursor: pointer;   
+     }
+       .logo
+       {
+         display: table;  
+         margin-left: 10px;
+         margin-right: 55px;
+         float: left;
+         height: 100%;
+     }
+     #logo-img
+     {
+      height: 100%;
+      width: auto;
+     }
+    /* unvisited link */
+    a:link {
+      color: white;
+    }
+
+    /* visited link */
+    a:visited {
+      color: white;  
+    }
+
+    /* mouse over link */
+    a:hover {
+      color: orange;
+    }
+
+    /* selected link */
+    a:active {
+      color: blue;
+    }
+     
+     .dropdown-content
+      {
+      display: none;
+      position: absolute;
+      background-color: #2c2c2c;
+      min-width: 160px;
+      box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+      padding: 12px 16px;
+      z-index: 1;
+      font-family: Verdana, Arial, sans-serif;
+      color: white;
+      }  
+       #left-table
+        {
+          display: table;  
+          float: left;
+          height: 100%;
+          border: 2px solid #005CFF;
+          border-radius: 5px;
+        }
+
+        #mid-table
+        {
+            margin-left: auto;
+            margin-right: auto;
+            height: 100%;
+            display: table;
+        }
+
+        #right-table
+        {
+          display: table;  
+          float: right;
+          height: 100%;
+          border: 2px solid #FF00FF;
+          border-radius: 5px;
+        }
+        .button-cell
+        {
+          display: table-cell;
+          vertical-align: middle;
+          text-align: center;         
+        }
+       .button-cell-center
+        {
+          border: 2px solid #00FFC2;
+          border-radius: 5px;
+        }
+       .button
+       {
+         height :100%;
+         margin-left: 1px;
+         margin-right: 1px;
+       }
+       .button:hover
+     {
+     cursor: pointer;
+     }
+       #arrow-table
+       {
+         display: table;  
+         float: right;
+         height: 100%;
+     }
+         #right-arrow
+         {
+        display: table-cell;
+         color: #FF00FF; 
+         font-size: 25;
+         text-align: center;
+         vertical-align: middle;
+         font-family: Verdana, Arial, sans-serif;
+     }
+     
+
+    </style>
+  </head>
+  <body>
+
+   
+      <div class="logo" onmouseenter="showmenu()">
+          <img id="logo-img" class="button" style="max-width: 48px; max-height: 48px;" src="https://cdn.glitch.com/5d895ccb-f486-40b0-8093-a61dab19f1a1%2Fdluxlogo%20copy.png?1549927147326">
+          <!--<div class="dropdown-content"> moved to build.html-->
+        </div>
+    
+    <div id="left-table">
+      <div class="button-cell">
+        <button id="gltfbutton" class="button" onclick="apploader()" type="button">Add 3D Models
+        </button>
+        <button id="imgbutton" class="button" onclick="imgloader()" type="button">Add Photos
+        </button>
+      </div>
+    </div>
+    
+    <div id="arrow-table">
+      <div id="right-arrow">
+        <p>→</p></div>
+    </div>
+    
+    <div id="right-table">
+      <div class="button-cell"> 
+        <button id="glitchload" class="button" onclick="glitchloader()" type="button" align="right">Code View
+        </button>
+        <button id="glitchrefresh" class="button" onclick="refreshglitch()" type="button" align="right">Refresh App
+        </button>
+      </div>
+    </div>
+
+    <div id="mid-table">
+      <div class="button-cell button-cell-center"> 
+        <button id="meh" class="button" onclick="info()" type="button">Description
+        </button>
+        <button id="go" class="button" onclick="postApp()" type="button">Publish!
+        </button>
+      </div>
+  </div>
+      
+    
+    <!--
+    <button id="postbutton" onclick="postloader()" type="button">Post to dlux
+    </button>
+    <button id="glitchbutton" onclick="glitchloader()" type="button">View IDE
+    </button>
+    -->
+    
+  
+  </body>
+</html>

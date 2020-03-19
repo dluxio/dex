@@ -1,0 +1,509 @@
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>dlux XR Builder</title>
+    <link rel="icon" 
+      type="image/png" 
+      href="https://cdn.glitch.com/5d895ccb-f486-40b0-8093-a61dab19f1a1%2Fdluxlogo%20copy.png?1549927147326">
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.1/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/steem/dist/steem.min.js"></script>
+    <script src="https://unpkg.com/ipfs-http-client@29.1.1/dist/index.min.js"></script>
+      <style type="text/css">
+       html, body{
+      margin: 0;
+      height: 100%;
+      }
+      iframe{
+      border: 0;
+      display:inline-block;
+      z-index: 0;
+      }
+      .logo:hover
+       {
+      cursor: pointer;   
+     }
+       .logo
+       {
+         display: table;  
+         margin-left: 10px;
+         margin-right: 55px;
+         float: left;
+         height: 100%;
+     }
+     #logo-img
+     {
+      height: 100%;
+      width: auto;
+     }
+    /* unvisited link */
+    a:link {
+      color: white;
+      text-decoration: none;
+    }
+
+    /* visited link */
+    a:visited {
+      color: white;
+      text-decoration: none;
+    }
+
+    /* mouse over link */
+    a:hover {
+      color: orange;
+      text-decoration: none;
+    }
+
+    /* selected link */
+    a:active {
+      color: blue;
+      text-decoration: none;
+    }
+     
+     .dropdown-content
+      {
+      margin-top: 60px;
+      display: inline-block;
+      position: absolute;
+      background-color: #2c2c2c;
+      min-width: 160px;
+      box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+      padding: 12px 16px;
+      z-index: -99;
+      font-family: Verdana, Arial, sans-serif;
+      color: white;
+      }  
+
+       #left-table
+        {
+          display: table;  
+          float: left;
+          height: 100%;
+          border: 2px solid #005CFF;
+          border-radius: 5px;
+        }
+
+        #mid-table
+        {
+            margin-left: auto;
+            margin-right: auto;
+            height: 100%;
+            display: table;
+        }
+
+        #right-table
+        {
+          display: table;  
+          float: right;
+          height: 100%;
+          border: 2px solid #FF00FF;
+          border-radius: 5px;
+        }
+        .button-cell
+        {
+          display: table-cell;
+          vertical-align: middle;
+          text-align: center;         
+        }
+       .button-cell-center
+        {
+          border: 2px solid #00FFC2;
+          border-radius: 5px;
+        }
+       .button
+       {
+         height :100%;
+         margin-left: 1px;
+         margin-right: 1px;
+       }
+       .button:hover
+     {
+     cursor: pointer;
+     }
+       #arrow-table
+       {
+         display: table;  
+         float: right;
+         height: 100%;
+     }
+         #right-arrow
+         {
+        display: table-cell;
+         color: #FF00FF; 
+         font-size: 25;
+         text-align: center;
+         vertical-align: middle;
+         font-family: Verdana, Arial, sans-serif;
+     }
+        .version {
+        font-size: 10;
+        color: #8D8D8D;
+        text-align: right;
+        margin-top: 20;
+        margin-bottom:0;
+        }
+
+    </style>
+    <script>
+      var srchost
+      const ipfs = window.IpfsHttpClient({ host: 'ipfs.infura.io', port: 5001, protocol: 'https'})
+      steem.api.getContent('markegiles', 'z67rwq0di4qv7egjx7dma81xjkv2jt87', function(err, result) { 
+      console.log(result)
+      srchost = 'https://glitch.com/edit/#!/' + window.location.host.split( '.' )[0]
+      var postKey = 'markegiles/z67rwq0di4qv7egjx7dma81xjkv2jt87'
+      var metadata = result.json_metadata
+      var VRhash = JSON.parse(metadata).vrHash //how dlux loads content
+      var iframe = document.createElement('iframe');
+      iframe.allowvr = 'yes'
+      iframe.id = 'theIframe'
+      iframe.allowfullscreen = 'yes'
+      iframe.scrolling = 'yes'
+      iframe.width = '50%'
+      iframe.height = '100%'
+      iframe.align = 'right'
+      iframe.setAttribute('allowfullscreen', true)
+      iframe.setAttribute('allow', 'gyroscope; accelerometer; microphone;')
+      iframe.src = '/post.html' // 'https://ipfs.io/ipfs/' + VRhash
+      document.body.appendChild(iframe);
+      var menu = document.createElement('iframe');
+      menu.id = 'theMenu'
+      menu.allowfullscreen = 'no'
+      menu.scrolling = 'yes'
+      menu.width = '50%'
+      menu.height = '60px'
+      menu.align = 'top' 
+      menu.src = '/menu.html'
+      document.body.appendChild(menu);
+      var editor = document.createElement('iframe');
+      editor.id = 'theGlitch'
+      editor.allowfullscreen = 'no'
+      editor.scrolling = 'yes'
+      editor.width = '50%'
+      editor.height = '95%'
+      editor.align = 'left'
+      editor.src = srchost
+      document.body.appendChild(editor);
+      })
+      var rightContent = 'editor'
+      var leftContent = 'glitch'
+      //ios polyfill for motion
+      function isIOS() {
+      return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+      }
+      function cloneDeviceMotionEvent(e) {
+      return {
+      acceleration: {
+      x: e.acceleration.x,
+      y: e.acceleration.y,
+      z: e.acceleration.z,
+      },
+      accelerationIncludingGravity: {
+      x: e.accelerationIncludingGravity.x,
+      y: e.accelerationIncludingGravity.y,
+      z: e.accelerationIncludingGravity.z,
+      },
+      rotationRate: {
+      alpha: e.rotationRate.alpha,
+      beta: e.rotationRate.beta,
+      gamma: e.rotationRate.gamma,
+      },
+      interval: e.interval,
+      timeStamp: e.timeStamp
+      };
+      }
+      
+      //Iframe messaging
+      if (window.addEventListener) {
+      window.addEventListener("message", onMessage, false);
+      }
+      else if (window.attachEvent) {
+      window.attachEvent("onmessage", onMessage, false);
+      }
+      function onMessage(event) {
+      //if (event.origin !== "https://cheerful-suggestion.glitch.me") return;
+      var data = event.data;
+      if (typeof(window[data.func]) == "function") {
+      window[data.func].call(null, data.message);
+      }
+      }
+      function reqsign(op){
+      if(window.steem_keychain){
+      steem_keychain.requestBroadcast(op[1][1], op[0], op[1][0], function(response) {
+      console.log(response);
+      target.postMessage({
+      'func': 'keychainResponse',
+      'message': response
+      }, "*");
+      });
+      }
+      }
+      function uploadNMIPFS (event){
+      const ipfsIP = [{'path':'navmesh.glb','content':ipfs.Buffer.from(event.content, 'ascii')}]
+    ipfs.add(ipfsIP, (err, ipfsReturn) => {
+            if (!err){
+              var p = localStorage.getItem('pass')
+              fetch(`/glb/${p}`, {
+                method: 'POST',
+                headers: {
+            "Content-Type": "application/json",
+            // "Content-Type": "application/x-www-form-urlencoded",
+        },
+                body: JSON.stringify({customJson:{assets:[{asset:ipfsReturn[0],pin:true}]}})
+              })
+              .then(response => response.text())
+              .then(response => console.log('Updated!'))
+              .catch(error => console.error('Error:', error));
+            } else {
+        console.log('triggered')}
+          });
+      }
+      function loadUp(message) {
+        var ift = document.querySelector('#theIframe')
+        if (rightContent != 'ipfs') {
+          ift.setAttribute('src', 'https://globalupload.io')
+          rightContent = 'ipfs'
+        }
+      }
+      function info(message) {
+        var ift = document.querySelector('#theIframe')
+        if (rightContent != 'sign') {
+          ift.setAttribute('src', '/sign.html')
+          rightContent = 'sign'
+        }
+      }
+      function update(message) {
+        uploadNupdate()
+      }
+      function postApp(message) {
+        
+      }
+      function loadGlb(message) {
+        var ift = document.querySelector('#theIframe')
+        if (rightContent != 'gltf') {
+          ift.setAttribute('src', '/glb.html')
+          rightContent = 'gltf'
+        }
+      }
+      function loadimg(message) {
+        var ift = document.querySelector('#theIframe')
+        if (rightContent != 'img') {
+          ift.setAttribute('src', '/img.html')
+          rightContent = 'img'
+        }
+      }
+      function loadGlitch(message) {
+        var ift = document.querySelector('#theIframe')
+        if (rightContent != 'glitch') {
+          ift.setAttribute('src', srchost)
+          rightContent = 'glitch'
+        }
+      }
+      function loadPost(message) {
+        var ift = document.querySelector('#theGlitch')
+        if (leftContent != 'dlux') {
+          leftContent = 'dlux'
+          ift.setAttribute('src', 'https://dlux.io/post.html')
+        }
+      }
+      function loadApp(message) {
+        var ift = document.querySelector('#theGlitch')
+        if (leftContent != 'editor') {
+          ift.setAttribute('src', srchost)
+          leftContent = 'editor'
+        }
+      }
+      function refreshGlitch(message) {
+        console.log('click')
+        var ift = document.querySelector('#theIframe')
+        ift.setAttribute('src', 'about:blank')
+        ift.setAttribute('src', '/post.html')
+        rightContent = 'post'
+      }
+      //loopback for blockchain messaging
+      function vote(message) {
+      var target = document.getElementById('theIframe').contentWindow
+      target.postMessage({
+      'func': 'voteMsg',
+      'message': 'you sent Vote()'
+      }, "*");
+      }
+      function follow(message) {
+      console.log('got ' + message)
+      }
+      
+      function aVote(message) {
+      var target = document.getElementById('theIframe').contentWindow
+      target.postMessage({
+      'func': 'voteMsg',
+      'message': 'you sent aVote(' + message + ')'
+      }, "*");
+      }
+      
+      // handles links for site navigation
+      function sendLink(link) {
+      // location.href = link; effectively what happen - the rest is a loopback
+      var target = document.getElementById('theIframe').contentWindow
+      target.postMessage({
+      'func': 'voteMsg',
+      'message': 'you sent' + link
+      }, "*");
+      }
+      
+      //wait for content to load to pass state information, "iterate" means it's working
+      var postable = false
+      function iloaded(){
+        steem.api.getContent('markegiles', 'dlux-vr-tutorial-sm-test', function(err, result) {
+      var target = document.getElementById('theIframe').contentWindow
+      var un = 'Guest'
+      if(localStorage.getItem('un')){un = localStorage.getItem('un')}
+      target.postMessage({
+      'func': 'iAm',
+      'message': un,
+      }, "*");
+      target.postMessage({
+      'func': 'key',
+      'message': 'markegiles/dlux-vr-tutorial-sm-test',
+      }, "*");
+      target.postMessage({
+      'func': 'steemState',
+      'message': result,
+      }, "*");
+      })
+          if(window.steem_keychain) {
+            postable = true
+        }
+      }
+      
+      function uploadNupdate(){
+        fetch(`/post.html`)
+        .then(function(response) {
+          return response.arrayBuffer();
+        })
+        .then(function(dapp) {
+          const dApp = [{'path':'post.html','content':ipfs.Buffer.from(dapp)}]
+          //ipfs.Buffer.from(dapp)
+          console.log(dApp)
+          var dAppHash, pass
+          ipfs.add(dApp, (err, ipfsReturn) => {
+            console.log(ipfsReturn)
+            if (!err){
+              dAppHash = ipfsReturn
+              pass = localStorage.getItem('pass')
+              if (!pass){
+              pass = alert('enter the edit password', 'set this in .env')
+                localStorage.setItem('pass', pass)
+              }
+              console.log('IPFS Response to glitch, Standby')
+              fetch(`/setdapp/${pass}`, {
+                method: 'POST',
+                headers: {
+            "Content-Type": "application/json",
+            // "Content-Type": "application/x-www-form-urlencoded",
+        },
+                body: JSON.stringify({vrHash:dAppHash})
+              })
+              .then(response => response.text())
+              .then(response => info())
+              .catch(error => info());
+            } else {
+        console.log('IPFS Error:', err)}
+          })
+        });
+      }
+      
+      
+      function postApp () {
+        fetch(`/postdata`)
+        .then(function(response) {
+          return response.json();
+        })
+        .then(function(pd) { 
+          var customJSON = JSON.parse(JSON.stringify(pd.customJson))
+          var tags = JSON.stringify(customJSON.tags) || JSON.stringify(["dlux"])
+          delete customJSON.tags
+          var JSONString = JSON.stringify(customJSON,null,'')
+          JSONString = '{\"tags\":'+tags+','+JSONString.substr(1,JSONString.length-1)
+          console.log(JSONString)
+          if (pd.permlink && pd.customJson.vrHash){
+            const operations = [["comment", 
+                                 {"parent_author": "", 
+                                  "parent_permlink": JSON.parse(tags)[0], 
+                                  "author": pd.account, 
+                                  "permlink": pd.permlink, 
+                                  "title": pd.title, 
+                                  "body": pd.body + `\n***\n#### [View in VR @dlux-io](https://dlux.io/dlux/@${pd.account}/${pd.permlink})`, 
+                                  "json_metadata": JSONString}], 
+                                ["comment_options", 
+                                 {"author": pd.account, 
+                                  "permlink": pd.permlink, 
+                                  "max_accepted_payout": "1000000.000 SBD", 
+                                  "percent_steem_dollars": 10000, 
+                                  "allow_votes": true, 
+                                  "allow_curation_rewards": true, 
+                                  "extensions": 
+                                  [[0, 
+                                    {"beneficiaries":
+                                     [{"account":"dlux-io",
+                                       "weight":1000}]}]]}]]  
+            //beneficiary dlux-io >= 1000 to auto pin content for 6 months... you can add more
+            steem_keychain.requestBroadcast(pd.account, operations, 'active', function(response) {
+              console.log(response);
+            });
+          }
+        })
+      }
+            
+      if (isIOS()) {
+      window.addEventListener('devicemotion', function(e) {
+      document.getElementById('theIframe').contentWindow.postMessage({
+      type: 'devicemotion',
+      deviceMotionEvent: cloneDeviceMotionEvent(e),
+      }, '*');
+      });
+      }
+      
+      function hidemenu(){
+        document.getElementById('overmenu').setAttribute('style', 'z-index:-99;')
+      }
+      function showmenu(){ document.getElementById('overmenu').setAttribute('style', 'z-index:99;')
+      }
+      function cleangit(){
+      var pass = localStorage.getItem('pass')
+    if (!pass){
+              pass = alert('enter the edit password', 'set this in .env')
+                localStorage.setItem('pass', pass)
+              }
+              fetch(`/cleangit/${pass}`)
+              .then(response => response.text())
+              .then(response => console.log(`Cleaning git`))
+              .catch(error => console.error('Error:', error));
+      }
+    </script>
+  </head>
+<body>
+  <div onmouseleave="hidemenu()">
+          <div id="overmenu" class="dropdown-content" >
+            <a href="https://dlux.io/" target="_blank"><h2>dlux.io</h2></a>
+            <hr height="2px">
+            <a href="javascript:
+    var pass = prompt('Enter the edit password', 'Set in key.ENV');localStorage.setItem('pass', pass)"><p>Password 🔑</p></a>
+            <hr>
+            <a href="javascript:
+    var un = prompt('Enter your Steem Username', 'No @');localStorage.setItem('un', un)"><p>Steem Name Set</p></a>
+            <hr>
+            <a href="javascript:cleangit()"><p>Clean Git ✨</p></a>
+            <hr>
+            <a href="https://www.youtube.com/channel/UCrm_w3N8Wy9NRdItKxEMqiw" target="_blank"><p>Tutorials 📺</p></a>
+            <hr>
+            <a href="https://discord.gg/Beeb38j" target="_blank"><p>Chat Server 👋</p></a>
+            <hr>
+            <a href="https://github.com/dluxio/dluxio/wiki" target="_blank"><p>GitHub Wiki 🛠️</p></a>
+            <hr>
+            <a href="https://steempeak.com/@dlux-io" target="_blank"><p>Steem Blog 📗</p></a>
+            <hr>
+            <a href="http://otolux.la" target="_blank"><p>by OTOLUX 🦄</p></a>
+            <p class="version">XR Builder v0.2.0</p>
+          </div>
+  </div>
+</body>
+</html>

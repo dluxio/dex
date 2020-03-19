@@ -1,0 +1,1864 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.6.0/Chart.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/steem/dist/steem.min.js"></script>
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet" type="text/css">
+  <style>
+body {
+    background-color: #24242C;
+    color: #FFFFFF;
+}
+canvas {
+  width: 100%;
+  height: auto;
+  margin-top: 20px;
+}
+th, td {
+  border-bottom: 1px solid #000;
+  padding: 5px;
+}
+td {
+  background-color: #24242C
+}
+.navbar-custom {
+    background-color: #0E0E0E;
+}
+.price-chart {
+    border-radius: 20px;
+    background-image: -webkit-linear-gradient(158deg,rgba(231,255,107,1.00) 0%,rgba(235,180,0,1.00) 100%);
+    background-image: -moz-linear-gradient(158deg,rgba(231,255,107,1.00) 0%,rgba(235,180,0,1.00) 100%);
+    background-image: -o-linear-gradient(158deg,rgba(231,255,107,1.00) 0%,rgba(235,180,0,1.00) 100%);
+    background-image: linear-gradient(292deg,rgba(231,255,107,1.00) 0%,rgba(235,180,0,1.00) 100%);
+}
+.price-info {
+	background-color: #1B1B21;
+	border-radius: 20px;
+}
+.orderbook-chart {
+    background-color: #040404;
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
+}
+.orderbook-table {
+    background-color: #040404;
+    padding-bottom: 30px;
+	padding-left: 10px;
+	padding-right: 10px;
+    border-bottom-left-radius: 20px;
+    border-bottom-right-radius: 20px;
+}
+.widget {
+	margin-top: 20px;
+    background-color: #191919;
+    border-radius: 20px;
+    padding-top: 10px;
+    padding-right: 20px;
+    padding-bottom: 10px;
+    padding-left: 20px;	
+}
+.set-timescale {
+	padding: 10px;
+}
+.market-info-item {
+	margin: 10px;
+}
+.market-info-item h3 {
+	font-size: 1.8em;
+}
+.market-info-item label {
+	font-size: .8em;
+}
+.balance {
+	text-align: center;
+	padding-top: 20px;
+	padding-bottom: 10px;
+}
+
+.history {
+	background-color: #3E3E44;
+	border-radius: 20px;
+	padding-bottom: 30px;
+	padding-left: 5px;
+	padding-right: 5px;
+}
+
+.history-table td, .history-table th {
+	border-bottom: 1px solid #3E3E44;
+    padding: 5px;
+}
+
+.feed-table td, .feed-table th {
+	border-bottom: 1px solid #3E3E44;
+    padding: 5px;
+}
+
+.feed {
+	background-color: #3E3E44;
+	border-radius: 5px;
+	padding-bottom: 30px;
+	padding-left: 5px;
+	padding-right: 5px;
+}
+</style>
+  <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+  <script src="https://unpkg.com/popper.js/dist/umd/popper.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+  <title>dlux DEX</title>
+  <script>
+      /*
+      MIT License
+
+      Copyright (c) 2018 Steven Ettinger | @dlux-io
+
+      Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+      The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+      THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+      */
+      var postKey; //this page will be posted in IPFS and will need a way to display current state about itself. This key will be passed to declare its current state on Steem.
+      var permlink,author
+      function onSceneLoad(msg) {
+        var username = msg || iam;
+      }
+    
+      //API for steem and dlux
+    var iam = "Init", bal = 0, steembal = 0, sbdbal = 0,steemHis = [],steemTick,sbdHis = [], sbdTick, contracts
+    if (window.addEventListener) {
+    window.addEventListener("message", onMessage, false);
+    }
+    else if (window.attachEvent) {
+    window.attachEvent("onmessage", onMessage, false);
+    }
+    function onMessage(event) {
+    //if (event.origin !== "https://dlux.io" || "localhost:3000") return;
+    var data = event.data;
+    if (typeof(window[data.func]) == "function") {
+    window[data.func].call(null, data.message);
+    }
+    }
+    function voteMsg(message) {
+      AFRAME.scenes[0].emit('setVoteMsg', {val: message}); //transaction id in message, useful for triggering other actions.
+    }
+    function accountUpdate(message) {
+      console.log(message) //transaction id in message, useful for triggering other actions.
+    }
+    function voteButton(amt) { //
+      voteAmt = amt || 10000
+      AFRAME.scenes[0].emit('setVoteMsg', {val: 'Thank you for voting in VR'});
+    window.parent.postMessage({
+        'func': 'vote',
+        'message': voteAmt  //integer -10000(flag) to 10000(vote) on this post
+    }, "*");
+    }
+    function flagButton() {  //redundant and likely unused
+    var voteAmt = -1;
+    window.parent.postMessage({
+      'func': 'vote',
+      'message': voteAmt
+    }, "*");
+    }
+    function follow() {
+      window.parent.postMessage({
+        'func': 'follow',
+        'message': postKey.split('/')[0]
+    }, "*");
+      console.log('sent follow ' + postKey.split('/')[0])
+    }
+    /*
+    This function will prompt the user to post a comment to your dApp. This can be utilized to store everything from votable apps to references to 3d objects and media files. High scores, to reviews... this is the decentralized place to have users store and monetize information used by your dApps
+    */
+    function comment(message){
+    window.parent.postMessage({
+        'func': 'comment',
+        'message': {
+        'message': message.message,
+        'customJSON': message.customJSON
+    }
+    }, "*");
+      //returns a steemstate object that will likely retrigger the data initial data load for the dApp
+    }
+    function sendLink(payload) {
+    //  var link = document.querySelector('/@dlux-io').value //pass a string to escape the dlux.io iFrame. Domain level redirects are greatm external will recieve a warning.
+    window.parent.postMessage({
+    'func': 'sendLink',
+    'message': payload
+    }, "*");
+    }
+    function aVote(data) {   //utilize this API to trigger votes for other steem content. takes data string as "author/permLink/weight"
+      window.parent.postMessage({
+        'func': 'aVote',
+        'message': {
+          'permlink': data.split('/')[0], 
+         'author': data.split('/')[1],
+         'weight': 10000 || data.split('/')[2],
+    }
+    }, "*");
+    }
+    var hasMemoKey = false;
+    function memoKey (message) {
+      hasMemoKey = message;
+    }
+    function key (message) { //how this post finds itself on blockchain
+      postKey = message;
+      permlink = message.split('/');
+      onSceneLoad(iam);
+    }
+    function accountUpdate(message) {
+      console.log(message)
+    }
+    function steemState(message) {  //the entirety of the current steem state will be passed in JSON. Utilize this function to initialize current state. Vote and comment also will return a steemState(message)
+      console.log(message)
+    }
+    function iAm(message) { //This is the unsecure identifier that returns logged in steem user
+      iam = message;
+      var un = document.getElementById('navbarDropdown1')
+      un.innerHTML=message
+      fetch(`https://token.dlux.io/@${iam}`)
+  .then(function(response) {
+    return response.json();
+  })
+  .then(function(myJson) {
+    var balDiv = document.getElementsByClassName('balance')
+    bal = myJson.balance
+    var balf = parseFloat(myJson.balance/1000).toFixed(3)
+    balDiv[0].innerHTML = `<h4>Balance: ${balf} DLUX</h4>`
+    balDiv[1].innerHTML = `<h4>Balance: ${balf} DLUX</h4>`
+    document.getElementById('sellqtysbd').value = parseFloat(balf).toFixed(3)
+    document.getElementById('sellqtysteem').value = parseFloat(balf).toFixed(3)
+    fetch("https://api.steemit.com", {
+  body: `{\"jsonrpc\":\"2.0\", \"method\":\"database_api.find_accounts\", \"params\": {\"accounts\":[\"${iam}\"]}, \"id\":1}`,
+  headers: {
+    "Content-Type": "application/x-www-form-urlencoded"
+  },
+  method: "POST"
+}).then(res =>res.json()
+).then(json => {
+    const res = json.result.accounts[0]
+      console.log(res)
+      steembal = res.balance.amount
+      sbdbal = res.sbd_balance.amount
+    document.getElementsByClassName('text-center text-secondary')[0].innerHTML = `BALANCE: ${parseFloat(res.balance.amount/1000).toFixed(3)} STEEM`
+    document.getElementsByClassName('text-center text-secondary')[1].innerHTML = `BALANCE: ${parseFloat(res.balance.amount/1000).toFixed(3)} STEEM`
+    document.getElementById('buytotalsteem').value = parseFloat(steembal/1000).toFixed(3)
+    document.getElementById('buytotalsbd').value = parseFloat(sbdbal/1000).toFixed(3)
+    document.getElementsByClassName('text-center text-secondary')[2].innerHTML = `BALANCE: ${parseFloat(res.sbd_balance.amount/1000).toFixed(3)} SBD`
+    document.getElementsByClassName('text-center text-secondary')[3].innerHTML = `BALANCE: ${parseFloat(res.sbd_balance.amount/1000).toFixed(3)} SBD`
+})
+  });
+    }
+    function onpageloaded() { //requests steem state
+      window.parent.postMessage({
+      'func': 'iloaded',
+      'message': ''
+    }, "*");
+    }
+    function reqsign(op,req) { //requests keychain to sign and broadcast
+      window.parent.postMessage({
+      'func': 'reqsign',
+      'message': [op,req]
+    }, "*");
+    }
+    function escrow_transfer(ip1,ip2,ip3,ip4,ip5,ip6,ip7,ip8,ip9,ip10,ip11) { //requests keychain to sign and broadcast
+      window.parent.postMessage({
+      'func': 'reqsignescrow',
+      'message': [ip1,ip2,ip3,ip4,ip5,ip6,ip7,ip8,ip9,ip10,ip11]
+    }, "*");
+    }
+    </script>
+</head>
+<body id="top">
+<div class="container" style="padding-top: 70px">
+	
+  <nav class="navbar navbar-dark navbar-custom fixed-top navbar-expand-lg justify-content-end">
+	 <a class="navbar-brand" href="https://dlux.io" target="_blank">dx <img src="https://cdn.glitch.com/63c826e5-5751-4fe1-afd9-dd7635e03476%2Fhyper-marker.png?v=1583530581398" alt="dlux-logo" width="32" height="32" class="rounded"> dlux</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent1" aria-controls="navbarSupportedContent1" aria-expanded="false" aria-label="Toggle navigation"> <span class="navbar-toggler-icon"></span> </button>
+	  <div class="collapse navbar-collapse" id="navbarSupportedContent1">
+    <form class="form-inline">
+    
+	<a href="https://ipfs.dlux.io" target="_blank"><button class="btn btn-outline-info ml-2" type="button"><i class="fas fa-layer-group"></i> SDK</button></a>
+	<a href="https://github.com/dluxio/dlux_open_token" target="_blank"><button class="btn btn-outline-info ml-2" type="button"><i class="fas fa-robot"></i> NODE </button></a>
+      
+      <div class="dropdown show"> <button class="btn btn-outline-info dropdown-toggle ml-2" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"> More Info </button>
+	    <div class="dropdown-menu">
+	      <a class="dropdown-item" href="https://docs.google.com/presentation/d/1L0ZhqUsetBB2jI8fcHqUIOt7ddDKFtn4VV_C2-Uogcw" target="_blank">Slide Deck</a>
+		  <a class="dropdown-item" href="https://docs.google.com/document/d/1_jHIJsX0BRa5ujX0s-CQg3UoQC2CBW4wooP2lSSh3n0" target="_blank">White Paper</a>
+		  <a class="dropdown-item" href="https://github.com/dluxio/dluxio/wiki" target="_blank">GitHub Wiki</a> 
+	      <div class="dropdown-divider"></div>
+		  <a class="dropdown-item" href="https://steempeak.com/@dlux-io" target="_blank">Steem Blog</a>
+		  <a class="dropdown-item" href="https://discord.gg/Beeb38j" target="_blank">Discord Server</a>
+		  <a class="dropdown-item" href="https://dlux.tokenbb.io/" target="_blank">Community BB</a>
+        <div class="dropdown-divider"></div>
+     
+      <p class="dropdown-header">dx gui v0.2<br>open token v0.0.4a</p>
+		</div>
+	</div>
+  </form>
+	  </div>
+			<ul class="navbar-nav">
+	      <li class="nav-item dropdown"> <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown1" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"> username </a>
+	        <div class="dropdown-menu" aria-labelledby="navbarDropdown1"> <a class="dropdown-item" href="#">Send</a>
+			  <a class="dropdown-item" href="#">Recieve</a>
+	          <div class="dropdown-divider"></div>
+	          <a class="dropdown-item" href="#">Logout</a> </div>
+          </li>
+        </ul>
+  </nav>
+ 
+	
+	
+ 
+
+  <div class="container-fluid" style="padding: 0">
+	  <ul id="pagenav" class="nav nav-pills justify-content-center" role="tablist">
+		  <li class="nav-item"> <a class="nav-link" href="#info" id="infotab" role="tab" data-toggle="tab" aria-controls="info" aria-expanded="true">INFO</a></li>
+	    <li class="nav-item"> <a class="nav-link active" href="#steem" id="steemtab" role="tab" data-toggle="tab" aria-controls="steem" aria-expanded="true">STEEM</a></li>
+	    <li class="nav-item"> <a class="nav-link" href="#sbd" role="tab" id="sbdtab" data-toggle="tab" aria-controls="sbd">SBD</a></li>
+		  <li class="nav-item"> <a class="nav-link" href="#ticker" role="tab" id="tickertab" data-toggle="tab" aria-controls="ticker">FEED</a></li>
+	  </ul>
+	  <!-- Content Panel -->
+	  <div id="pagecontent" class="tab-content">
+		 <div role="tabpanel" class="tab-pane fade show" id="info" aria-labelledby="infotab">
+		   <div class="container-fluid" style="padding:0"> 
+				  <div id="carouselExampleIndicators1" class="carousel slide" data-ride="carousel" style="background-color: grey; margin-bottom:20px; margin-top:20px;">
+				    <ol class="carousel-indicators">
+				      <li data-target="#carouselExampleIndicators1" data-slide-to="0" class="active"></li>
+				      <li data-target="#carouselExampleIndicators1" data-slide-to="1"></li>
+				      <li data-target="#carouselExampleIndicators1" data-slide-to="2"></li>
+			        </ol>
+				    <div class="carousel-inner" role="listbox">
+				      <div class="carousel-item active"> <img class="d-block mx-auto" src="https://cdn.glitch.com/63c826e5-5751-4fe1-afd9-dd7635e03476%2Ftoken.jpg?v=1583619470920" alt="First slide">
+				        <div class="carousel-caption">
+				          <h5>DLUX ICO</h5>
+				          <p>Buy DLUX token now!</p>
+			            </div>
+			          </div>
+				      <div class="carousel-item"> <img class="d-block mx-auto" src="https://cdn.glitch.com/63c826e5-5751-4fe1-afd9-dd7635e03476%2Fbuilder.jpg?v=1583619472418" alt="Second slide">
+				        <div class="carousel-caption">
+				          <h5>XR Builder Beta</h5>
+				          <p>Build AR &amp; VR experiences with ZERO CODE!</p>
+			            </div>
+			          </div>
+				      <div class="carousel-item"> <img class="d-block mx-auto" src="https://cdn.glitch.com/63c826e5-5751-4fe1-afd9-dd7635e03476%2Fcommunity.jpg?v=1583619470874" alt="Third slide">
+				        <div class="carousel-caption">
+				          <h5>Join our Community</h5>
+				          <p>Chat on Discord, follow @dlux-io, &amp; watch tutorials</p>
+			            </div>
+			          </div>
+			        </div>
+				    <a class="carousel-control-prev" href="#carouselExampleIndicators1" role="button" data-slide="prev"> <span class="carousel-control-prev-icon" aria-hidden="true"></span> <span class="sr-only">Previous</span></a> <a class="carousel-control-next" href="#carouselExampleIndicators1" role="button" data-slide="next"> <span class="carousel-control-next-icon" aria-hidden="true"></span> <span class="sr-only">Next</span></a></div>
+                  
+                  <div class="row">
+                    <div class="col-xl-4">
+                      <div class="card" style="margin-bottom:20px;"> <img class="card-img-top" src="https://cdn.glitch.com/63c826e5-5751-4fe1-afd9-dd7635e03476%2Fmetaverse.jpg?v=1583619471970" alt="Card image cap">
+                        <div class="card-body" style="background:#1B1717">
+                          <h5 class="card-title">New Internet</h5>
+                          <p class="card-text">dlux decentralizes the spatial web to create the ultimate social app publishing platform</p>
+                          <a href="https://dlux.io/vr" class="btn btn-primary" target="_blank">Explore the Metaverse</a></div>
+                      </div>
+                    </div>
+                    <div class="col-xl-4">
+                      <div class="card" style="margin-bottom:20px;"> <img class="card-img-top" src="https://cdn.glitch.com/63c826e5-5751-4fe1-afd9-dd7635e03476%2Fbuilder-2.jpg?v=1583619471308" alt="Card image cap">
+                        <div class="card-body" style="background:#1B1717">
+                          <h5 class="card-title">XR Builder</h5>
+                          <p class="card-text">Build AR and VR experiences right in your web browser, without downloading any software</p>
+                          <a href="https://dlux-vr.glitch.me/build.html" class="btn btn-danger" target="_blank">Build the Metaverse</a></div>
+                      </div>
+                    </div>
+                    <div class="col-xl-4">
+                      <div class="card" style="margin-bottom:20px;"> <img class="card-img-top" src="https://cdn.glitch.com/63c826e5-5751-4fe1-afd9-dd7635e03476%2Fdlux-token.jpg?v=1583619471204" alt="Card image cap">
+                        <div class="card-body" style="background:#1B1717">
+                          <h5 class="card-title">DLUX Token</h5>
+                          <p class="card-text">Peer-to-peer trading, in-game transactions, and smart contracts on the dlux DAO</p>
+                          <a class="btn btn-warning" href="#top">Own the Metaverse</a></div>
+                      </div>
+                    </div>
+                  </div>
+                 <div class="jumbotron" style="background-color:#0F1F28; margin-bottom:20px;">
+                    <h1 class="display-4">decentralized limitless user experiences</h1>
+                    <p class="lead">dlux is an open-source, fully decentralized asset platform on the STEEM blockchain.</p>
+                    <hr class="my-4" style="background-color:#fff">
+                    <p>Make and monetize anything - dlux empowers the spatial web with tokenization and crypto rewards. Join us in the metaverse today!</p>
+                    <div class="btn-toolbar" role="toolbar">
+						<a class="btn btn-outline-light mr-2" href="https://docs.google.com/presentation/d/1L0ZhqUsetBB2jI8fcHqUIOt7ddDKFtn4VV_C2-Uogcw" role="button" target="_blank">Slide Deck</a>
+						<a class="btn btn-outline-light mr-2" href="https://docs.google.com/document/d/1_jHIJsX0BRa5ujX0s-CQg3UoQC2CBW4wooP2lSSh3n0" role="button" target="_blank">White Paper</a>
+                        <a class="btn btn-outline-light mr-2" href="https://discord.gg/Beeb38j" target="_blank">Discord Server</a>
+                      </div>
+                    </div>
+</div>
+  </div>
+	    <div role="tabpanel" class="tab-pane fade show active" id="steem" aria-labelledby="steemtab">
+			<div class="container-fluid" style="padding:0">
+	      <div class="row">
+	    <div class="col-lg-8">
+		<div class="price-info">
+		<canvas id="historicpricesteem" height="250" class="price-chart"></canvas>
+		<div class="d-flex justify-content-center">
+		  <div class="btn-group btn-group-toggle set-timescale" data-toggle="buttons">
+  				<label class="btn btn-primary active">
+    				<input type="radio" name="options" id="hoursteem" autocomplete="off" checked> 1H
+  				</label>
+  				<label class="btn btn-primary">
+    				<input type="radio" name="options" id="daysteem" autocomplete="off"> 1D
+  				</label>
+  				<label class="btn btn-primary">
+    			<input type="radio" name="options" id="weeksteem" autocomplete="off"> 1W
+  				</label>
+			  	<label class="btn btn-primary">
+    			<input type="radio" name="options" id="monthsteem" autocomplete="off"> 1M
+  				</label>
+			  	<label class="btn btn-primary">
+    			<input type="radio" name="options" id="yearsteem" autocomplete="off"> 1Y
+  				</label>
+			</div>
+			</div>
+		<div class="d-flex justify-content-center">
+			<div class="text-center market-info-item">
+				<h3><span>$125.1K</span></h3>
+				<div>
+					<label>Market Cap</label>
+				</div>
+			</div>
+			<div class="text-center market-info-item"><h1>|</h1></div>
+			<div class="text-center market-info-item">
+				<h3><span>6M DLUX</span></h3>
+				<div>
+					<label>Supply</label>
+				</div>
+			</div>
+			<div class="text-center market-info-item"><h1>|</h1></div>
+			<div class="text-center market-info-item">
+				<h3><span>$1.3K</span></h3>
+				<div>
+					<label>Volume</label>
+				</div>
+			</div>
+		  </div>
+			<div class="balance"><h4>BAL: 62382 DLUX</h4></div>
+		  </div>
+			
+	</div>
+	  <div class="col-lg-4">
+		  <div>
+			  <div class="widget">
+			<ul id="orderwidget" class="nav nav-pills justify-content-center" role="tablist">
+			  <li class="nav-item"> <a class="nav-link active" href="#buysteem" id="buytabsteem" role="tab" data-toggle="tab" aria-controls="buysteem" aria-expanded="true">Buy DLUX</a></li>
+			  <li class="nav-item"> <a class="nav-link" href="#sellsteem" role="tab" id="selltabsteem" data-toggle="tab" aria-controls="sellsteem">Sell DLUX</a></li>
+			</ul>
+			  <!-- Content Panel -->
+		    <div id="orderformsteem" class="tab-content">
+			    <div role="tabpanel" class="tab-pane fade show active" id="buysteem" aria-labelledby="buytabsteem">
+			      <form>
+	    	<div class="form-group" style="padding-top: 10px">
+	    	  <label for="inputbuypricesteem">Bid Price</label>
+	    	  <input class="form-control" id="buypricesteem" placeholder="Amount in STEEM">
+			<div class="text-center" style="padding-top: 10px">
+				<button type="button" class="btn btn-outline-primary btn-sm">Lowest Ask</button>
+			</div>
+        	</div>
+		    <div class="form-group">
+		      <label for="inputbuyqtysteem">Qty.</label>
+		      <input type="number"  min="0.001" step="0.001" class="form-control" id="buyqtysteem" placeholder="How many">
+				<div class="text-center" style="padding-top: 10px">
+				<button type="button" class="btn btn-outline-primary btn-sm">Max</button>
+				<button type="button" class="btn btn-outline-primary btn-sm">1/2</button>
+				<button type="button" class="btn btn-outline-primary btn-sm">1/4</button>
+				</div>
+	        </div>
+			<div class="form-group">
+		      <label for="inputbuytotalsteem">Total</label>
+		      <input type="number"  min="0.001" step="0.001" class="form-control" id="buytotalsteem" placeholder="Order total">
+			  <div class="text-center text-secondary" style="padding-top: 10px">STEEM BALANCE</div>
+	        </div>
+			<div class="text-center">
+		    <button type="button" class="btn btn-outline-success" onclick="placeSteemBuy()">Place Buy Order</button>
+			</div>
+	      </form>
+		        </div>
+			    <div role="tabpanel" class="tab-pane fade" id="sellsteem" aria-labelledby="selltabsteem">
+			      <form>
+	    <div class="form-group" style="padding-top: 10px">
+	      <label for="inputsellpricesteem">Ask Price</label>
+	      <input class="form-control" id="sellpricesteem" placeholder="Amount in STEEM">
+			<div class="text-center" style="padding-top: 10px">
+				<button type="button" class="btn btn-outline-primary btn-sm">Highest Bid</button>
+			</div>
+        </div>
+		    <div class="form-group">
+		      <label for="inputsellqtysteem">Qty.</label>
+		      <input type="number"  min="0.001" step="0.001" class="form-control" id="sellqtysteem" placeholder="How many">
+			  <div class="text-center" style="padding-top: 10px">
+				<button type="button" class="btn btn-outline-primary btn-sm">Max</button>
+				<button type="button" class="btn btn-outline-primary btn-sm">1/2</button>
+				<button type="button" class="btn btn-outline-primary btn-sm">1/4</button>
+				</div>
+	        </div>
+					  <div class="form-group">
+		      <label for="inputselltotalsteem">Total</label>
+		      <input type="number"  min="0.001" step="0.001" class="form-control" id="selltotalsteem" placeholder="Order total">
+			  <div class="text-center text-secondary" style="padding-top: 10px">STEEM BALANCE</div>
+	        </div>
+		    <div class="text-center">
+		    <button type="button" class="btn btn-outline-danger" onclick="placeSteemAsk()">Place Sell Order</button>
+			</div>
+	      </form>
+		        </div>
+			   
+		    </div>
+		  </div>
+			
+        </div>  
+  </div>
+	</div>
+	<div class="row">
+	<div class="col-lg-8">
+	<canvas id="marketorderssteem" height="125" class="orderbook-chart"></canvas>
+	<div class="container orderbook-table">
+	  <div class="row text-center">
+		  <div class="col-lg-6">
+			  <h5 style="padding-top: 10px">BUY ORDERS</h5>
+		  <table width="100%">
+  <tbody>
+    <tr>
+      <th scope="col">TOTAL</th>
+      <th scope="col">QTY</th>
+      <th scope="col">BID</th>
+      <th scope="col">&nbsp;</th>
+    </tr>
+  </tbody>
+</table>
+		  </div>
+		  <div class="col-lg-6">
+			  <h5 style="padding-top: 10px">SELL ORDERS</h5>
+		    <table width="100%">
+  <tbody>
+    <tr>
+      <th scope="col">TOTAL</th>
+      <th scope="col">QTY</th>
+      <th scope="col">ASK</th>
+      <th scope="col">&nbsp;</th>
+    </tr>
+  </tbody>
+</table>
+		  </div>
+		</div>
+		  </div>
+	    </div>
+		  <div class="col-lg-4 text-center mt-4">
+			  
+			  <div class="history">
+     <div>&nbsp;</div>
+        <h5>TRADE HISTORY</h5>
+   
+          
+
+		    <table width="100%" class="history-table">
+  <tbody>
+    <tr>
+      <th scope="col">DATE</th>
+      <th scope="col">PRICE</th>
+      <th scope="col">QTY</th>
+      <th scope="col">TOTAL</th>
+    </tr>
+  </tbody>
+</table>
+	</div>
+	</div>
+	  </div>
+</div>
+		  </div>
+	    <div role="tabpanel" class="tab-pane fade" id="sbd" aria-labelledby="sbdtab">
+			<div class="container-fluid" style="padding:0">
+	      <div class="row">
+	    <div class="col-lg-8">
+		<div class="price-info">
+		<canvas id="historicpricesbd" class="price-chart" style="height:250px !important;"></canvas>
+		<div class="d-flex justify-content-center">
+		  <div class="btn-group btn-group-toggle set-timescale" data-toggle="buttons">
+  				<label class="btn btn-primary active">
+    				<input type="radio" name="options" id="hoursbd" autocomplete="off" checked> 1H
+  				</label>
+  				<label class="btn btn-primary">
+    				<input type="radio" name="options" id="daysbd" autocomplete="off"> 1D
+  				</label>
+  				<label class="btn btn-primary">
+    			<input type="radio" name="options" id="weeksbd" autocomplete="off"> 1W
+  				</label>
+			  	<label class="btn btn-primary">
+    			<input type="radio" name="options" id="monthsbd" autocomplete="off"> 1M
+  				</label>
+			  	<label class="btn btn-primary">
+    			<input type="radio" name="options" id="yearsbd" autocomplete="off"> 1Y
+  				</label>
+			</div>
+			</div>
+		<div class="d-flex justify-content-center">
+			<div class="text-center market-info-item">
+				<h3><span>$125.1K</span></h3>
+				<div>
+					<label>Market Cap</label>
+				</div>
+			</div>
+			<div class="text-center market-info-item"><h1>|</h1></div>
+			<div class="text-center market-info-item">
+				<h3><span>6M DLUX</span></h3>
+				<div>
+					<label>Supply</label>
+				</div>
+			</div>
+			<div class="text-center market-info-item"><h1>|</h1></div>
+			<div class="text-center market-info-item">
+				<h3><span>$1.3K</span></h3>
+				<div>
+					<label>Volume</label>
+				</div>
+			</div>
+		  </div>
+		  <div class="balance">
+		    <h4>DLUX BALANCE</h4>
+		  </div>
+		  </div>
+			
+	</div>
+	  <div class="col-lg-4">
+		  <div>
+			  <div class="widget">
+			<ul id="orderwidgetsbd" class="nav nav-tabs justify-content-center" role="tablist">
+			  <li class="nav-item"> <a class="nav-link active" href="#buysbd" id="buytabsbd" role="tab" data-toggle="tab" aria-controls="buy" aria-expanded="true">Buy DLUX</a></li>
+			  <li class="nav-item"> <a class="nav-link" href="#sellsbd" role="tab" id="selltabsbd" data-toggle="tab" aria-controls="sell">Sell DLUX</a></li>
+			</ul>
+			  <!-- Content Panel -->
+		    <div id="orderformsbd" class="tab-content">
+			    <div role="tabpanel" class="tab-pane fade show active" id="buysbd" aria-labelledby="buytabsbd">
+			      <form>
+	    	<div class="form-group" style="padding-top: 10px">
+	    	  <label for="inputbuypricesbd">Bid Price</label>
+	    	  <input class="form-control" id="buypricesbd" placeholder="Amount in SBD">
+			<div class="text-center" style="padding-top: 10px">
+				<button type="button" class="btn btn-outline-primary btn-sm">Lowest Ask</button>
+			</div>
+        	</div>
+		    <div class="form-group">
+		      <label for="inputbuyqtysbd">Qty.</label>
+		      <input type="number"  min="0.001" step="0.001" class="form-control" id="buyqtysbd" placeholder="How many">
+				<div class="text-center" style="padding-top: 10px">
+				<button type="button" class="btn btn-outline-primary btn-sm">Max</button>
+				<button type="button" class="btn btn-outline-primary btn-sm">1/2</button>
+				<button type="button" class="btn btn-outline-primary btn-sm">1/4</button>
+				</div>
+	        </div>
+			<div class="form-group">
+		      <label for="inputbuytotalsbd">Total</label>
+		      <input type="number"  min="0.001" step="0.001" class="form-control" id="buytotalsbd" placeholder="Order total">
+			  <div class="text-center text-secondary" style="padding-top: 10px">SBD BALANCE</div>
+	        </div>
+			<div class="text-center">
+		    <button type="button" class="btn btn-outline-success" onclick="placeSbdBuy()">Place Buy Order</button>
+			</div>
+	      </form>
+		        </div>
+			    <div role="tabpanel" class="tab-pane fade" id="sellsbd" aria-labelledby="selltabsbd">
+			      <form>
+	    <div class="form-group" style="padding-top: 10px">
+	      <label for="inputsellpricesbd">Ask Price</label>
+	      <input class="form-control" id="sellpricesbd" placeholder="Amount in SBD">
+			<div class="text-center" style="padding-top: 10px">
+				<button type="button" class="btn btn-outline-primary btn-sm">Highest Bid</button>
+			</div>
+        </div>
+		    <div class="form-group">
+		      <label for="inputsellqtysbd">Qty.</label>
+		      <input type="number"  min="0.001" step="0.001" class="form-control" id="sellqtysbd" placeholder="How many">
+			  <div class="text-center" style="padding-top: 10px">
+				<button type="button" class="btn btn-outline-primary btn-sm">Max</button>
+				<button type="button" class="btn btn-outline-primary btn-sm">1/2</button>
+				<button type="button" class="btn btn-outline-primary btn-sm">1/4</button>
+				</div>
+	        </div>
+			<div class="form-group">
+		      <label for="inputselltotalsbd">Total</label>
+		      <input type="number"  min="0.001" step="0.001" class="form-control" id="selltotalsbd" placeholder="Order total">
+			  <div class="text-center text-secondary" style="padding-top: 10px">SBD BALANCE</div>
+	        </div>
+		    <div class="text-center">
+		    <button type="button" class="btn btn-outline-danger" onclick="placeSbdSell()">Place Sell Order</button>
+			</div>
+	      </form>
+		        </div>
+			   
+		    </div>
+			</div>
+        </div>  
+  </div>
+	</div>
+	<div class="row">
+	<div class="col-lg-8">
+	<canvas id="marketorderssbd" height="125" class="orderbook-chart"></canvas>
+	<div class="container orderbook-table">
+	  <div class="row text-center">
+		  <div class="col-lg-6">
+			  <h5 style="padding-top: 10px">BUY ORDERS</h5>
+		  <table width="100%">
+  <tbody>
+    <tr>
+      <th scope="col">TOTAL</th>
+      <th scope="col">QTY</th>
+      <th scope="col">BID</th>
+      <th scope="col">&nbsp;</th>
+    </tr>
+  </tbody>
+</table>
+		  </div>
+		  <div class="col-lg-6">
+			  <h5 style="padding-top: 10px">SELL ORDERS</h5>
+		    <table width="100%">
+  <tbody>
+    <tr>
+      <th scope="col">TOTAL</th>
+      <th scope="col">QTY</th>
+      <th scope="col">ASK</th>
+      <th scope="col">&nbsp;</th>
+    </tr>
+  </tbody>
+</table>
+		  </div>
+		</div>
+		  </div>
+	    </div>
+		  <div class="col-lg-4 text-center">
+			  <h5 style="padding-top: 40px">TRADE HISTORY</h5>
+			  <div class="history">
+			  
+		    <table width="100%" class="history-table">
+  <tbody>
+    <tr>
+      <th scope="col">DATE</th>
+      <th scope="col">PRICE</th>
+      <th scope="col">QTY</th>
+      <th scope="col">TOTAL</th>
+    </tr>
+  </tbody>
+</table>
+	</div>
+	</div>
+	  </div>
+        </div>
+	    
+    </div>
+		   <div role="tabpanel" class="tab-pane fade" id="ticker" aria-labelledby="tickertab">
+			<div class="container-fluid" style="padding:0">
+		  <div class="col-lg-12 text-center" style="padding: 0">
+			  <h5 style="padding-top: 40px">DLUX TRANSACTION FEED</h5>
+			  <div class="feed">
+			  
+		    <table width="100%" class="feed-table">
+  <tbody>
+    <tr>
+      <th scope="col">BLOCK</th>
+      <th scope="col">USER</th>
+      <th scope="col">ACTION</th>
+      <th scope="col">TXID</th>
+    </tr>
+  </tbody>
+</table>
+	</div>
+	</div>
+			   </div>
+			   </div>
+	  </div>
+</div>
+	</div>
+	<div class="text-center" style="padding-top: 30px; padding-bottom: 10px"></div>
+  <script src="https://kit.fontawesome.com/0f693ffc58.js" crossorigin="anonymous"></script>
+<script>
+	
+    var historicPriceSteem = document.getElementById('historicpricesteem').getContext('2d');
+	
+    // Global Options
+    Chart.defaults.global.defaultFontFamily = 'Helvetica';
+    Chart.defaults.global.defaultFontSize = 18;
+    Chart.defaults.global.defaultFontColor = '#FFF';
+  
+  var priceChartSteem = new Chart(historicPriceSteem, {
+    type: 'bubble',
+    data: {
+      labels: "History",
+      datasets: []
+    },
+    options: {
+      title: {
+        display: true,
+        text: ''
+      }, scales: {
+        yAxes: [{ 
+          scaleLabel: {
+            display: true,
+            labelString: "Price",
+            min:0
+          }
+        }],
+        xAxes: [{ 
+          scaleLabel: {
+            display: true,
+            labelString: "Time",
+            min:31900000
+          }
+        }]
+      }
+    }
+});
+
+
+  var marketOrdersSteem = document.getElementById('marketorderssteem').getContext('2d');
+	var gradientGrnSteem = marketOrdersSteem.createLinearGradient(0, 0, 0, 400);
+	gradientGrnSteem.addColorStop(0, 'rgba(90, 216, 154, 1)');   
+	gradientGrnSteem.addColorStop(1, 'rgba(90, 216, 154, 0)');
+	
+	var gradientRedSteem = marketOrdersSteem.createLinearGradient(0, 0, 0, 400);
+	gradientRedSteem.addColorStop(0, 'rgba(226, 94, 94, 1)');   
+	gradientRedSteem.addColorStop(1, 'rgba(226, 94, 94, 0)');
+	
+    var buySellChartSteem = new Chart(marketOrdersSteem, {
+      type:'line', // bar, horizontalBar, pie, line, doughnut, radar, polarArea
+      data:{
+        datasets:[{
+          data:[
+          ],
+          backgroundColor:'#C02525',
+          hoverBorderWidth:2,
+          steppedLine:true,
+          hoverBorderColor:'#FFCE00'
+        },{
+          data:[
+          ],
+          backgroundColor:'#25C025',
+          hoverBorderWidth:2,
+          steppedLine:true,
+          hoverBorderColor:'#FFCE00'
+        }]
+      },
+      options:{	
+		responsive: false,
+        title:{
+          display:true,
+          text:'DLUX-STEEM ORDER BOOK',
+          fontSize:25
+        },
+        legend:{
+          display:false,
+          position:'right',
+          labels:{
+          fontColor:'#000'
+          }
+        },
+        layout:{
+          padding:{
+            left:10,
+            right:10,
+            bottom:10,
+            top:10
+          }
+        },
+        tooltips:{
+          enabled:true
+        },
+		scales: {
+			xAxes: [{
+				ticks: {
+                    display: true //removes the label
+                },
+				gridLines: {
+          
+            labelString: "Price",
+				}
+			}],
+			yAxes: [{
+        stacked:true,
+        type:'linear',
+				ticks: {
+                    display: true, //removes the label
+          
+            labelString: "Volume",
+                },
+				gridLines: {
+					display: false
+				}
+			}]
+		}
+      
+      }
+    });
+	var historicPriceSbd = document.getElementById('historicpricesbd').getContext('2d');
+    
+	var priceChartSbd = new Chart(historicPriceSbd, {
+    type: 'bubble',
+    data: {
+      labels: "History",
+      datasets: []
+    },
+    options: {
+      title: {
+        display: true,
+        text: ''
+      }, scales: {
+        yAxes: [{ 
+          scaleLabel: {
+            display: true,
+            labelString: "Price",
+            min:0
+          }
+        }],
+        xAxes: [{ 
+          scaleLabel: {
+            display: true,
+            labelString: "Time",
+            min:31900000
+          }
+        }]
+      }
+    }
+});
+
+    var marketOrdersSbd = document.getElementById('marketorderssbd').getContext('2d');
+	
+	var gradientGrnSbd = marketOrdersSbd.createLinearGradient(0, 0, 0, 400);
+	gradientGrnSbd.addColorStop(0, 'rgba(90, 216, 154, 1)');   
+	gradientGrnSbd.addColorStop(1, 'rgba(90, 216, 154, 0)');
+	
+	var gradientRedSbd = marketOrdersSbd.createLinearGradient(0, 0, 0, 400);
+	gradientRedSbd.addColorStop(0, 'rgba(226, 94, 94, 1)');   
+	gradientRedSbd.addColorStop(1, 'rgba(226, 94, 94, 0)');
+    var buySellChartSbd = new Chart(marketOrdersSbd, {
+      type:'line', // bar, horizontalBar, pie, line, doughnut, radar, polarArea
+      data:{
+        datasets:[{
+          label:'Bids',
+          data:[
+          ],
+          backgroundColor:[gradientGrnSteem, gradientGrnSteem, gradientGrnSteem, gradientRedSteem, gradientRedSteem, gradientRedSteem],
+		  hoverBackgroundColor:[gradientGrnSteem, gradientGrnSteem, gradientGrnSteem, gradientRedSteem, gradientRedSteem, gradientRedSteem],
+          hoverBorderWidth:2,
+          steppedLine:true,
+          hoverBorderColor:'#FFCE00'
+        },{
+          label:'Asks',
+          data:[
+          ],
+          backgroundColor:[gradientGrnSteem, gradientGrnSteem, gradientGrnSteem, gradientRedSteem, gradientRedSteem, gradientRedSteem],
+		  hoverBackgroundColor:[gradientGrnSteem, gradientGrnSteem, gradientGrnSteem, gradientRedSteem, gradientRedSteem, gradientRedSteem],
+          hoverBorderWidth:2,
+          steppedLine:true,
+          hoverBorderColor:'#FFCE00'
+        }]
+      },
+      options:{	
+		responsive: true,
+        title:{
+          display:true,
+          text:'DLUX-STEEM ORDER BOOK',
+          fontSize:25
+        },
+        legend:{
+          display:false,
+          position:'right',
+          labels:{
+          fontColor:'#000'
+          }
+        },
+        layout:{
+          padding:{
+            left:0,
+            right:0,
+            bottom:0,
+            top:0
+          }
+        },
+        tooltips:{
+          enabled:true
+        },
+		scales: {
+			xAxes: [{
+				ticks: {
+                    display: true //removes the label
+                },
+				gridLines: {
+					display: false,
+          
+            labelString: "Price",
+				}
+			}],
+			yAxes: [{
+        stacked:true,
+				ticks: {
+            display: true, //removes the label
+            labelString: "Volume",
+                },
+				gridLines: {
+					display: false
+				}
+			}]
+		}
+      
+      }
+    });
+  onpageloaded()
+  let dex,stats,steem, feed
+  var urls = ['https://token.dlux.io/stats','https://token.dlux.io/dex','https://token.dlux.io/feed']
+  Promise.all(urls.map(u=>fetch(u))).then(res =>
+    Promise.all(res.map(res => res.json()))
+).then(jsons => {
+    dex = jsons[1]
+    stats = jsons[0]
+    feed = jsons[2].feed
+    start()
+})
+  
+function fillInDlux(rateID,dluxID,amountID){
+    if(parseFloat(document.getElementById('buytotalsteem').value)*1000 > steembal){document.getElementById('buytotalsteem').value= parseFloat(steembal/1000).toFixed(3)}
+    if(parseFloat(document.getElementById('buytotalsbd').value)*1000 > sbdbal){document.getElementById('buytotalsbd').value = parseFloat(sbdbal.amount/1000).toFixed(3)}
+    if(parseFloat(document.getElementById('buyqtysbd').value)*1000 > bal){document.getElementById('sellqtysbd').value = parseFloat(bal).toFixed(3)}
+    if(parseFloat(document.getElementById('buyqtysteem').value)*1000 > bal){document.getElementById('sellqtysteem').value = parseFloat(bal).toFixed(3)}
+    document.getElementById(dluxID).value = parseFloat(parseFloat(document.getElementById(amountID).value)/parseFloat(document.getElementById(rateID).value)).toFixed(3)
+}
+function adjustAmount(amount,rateID,dluxID,amountID){
+    document.getElementById(dluxID).value = parseFloat(amount/1000).toFixed(3)
+    if(parseFloat(document.getElementById('buytotalsteem').value)*1000 > steembal){document.getElementById('buytotalsteem').value= parseFloat(steembal/1000).toFixed(3)}
+    if(parseFloat(document.getElementById('buytotalsbd').value)*1000 > sbdbal){document.getElementById('buytotalsbd').value = parseFloat(sbdbal.amount/1000).toFixed(3)}
+    if(parseFloat(document.getElementById('buyqtysbd').value)*1000 > bal){document.getElementById('sellqtysbd').value = parseFloat(bal).toFixed(3)}
+    if(parseFloat(document.getElementById('buyqtysteem').value)*1000 > bal){document.getElementById('sellqtysteem').value = parseFloat(bal).toFixed(3)}
+    document.getElementById(amountID).value = parseFloat(parseFloat(document.getElementById(dluxID).value)*parseFloat(document.getElementById(rateID).value)).toFixed(3)
+}
+function autoDlux(tick,rateID,dluxID,amountID){
+    document.getElementById(rateID).value = parseFloat(tick).toFixed(5)
+    if(parseFloat(document.getElementById('buytotalsteem').value)*1000 > steembal){document.getElementById('buytotalsteem').value= parseFloat(steembal/1000).toFixed(3)}
+    if(parseFloat(document.getElementById('buytotalsbd').value)*1000 > sbdbal){document.getElementById('buytotalsbd').value = parseFloat(sbdbal.amount/1000).toFixed(3)}
+    if(parseFloat(document.getElementById('buyqtysbd').value)*1000 > bal){document.getElementById('sellqtysbd').value = parseFloat(bal).toFixed(3)}
+    if(parseFloat(document.getElementById('buyqtysteem').value)*1000 > bal){document.getElementById('sellqtysteem').value = parseFloat(bal).toFixed(3)}
+    document.getElementById(dluxID).value = parseFloat(parseFloat(document.getElementById(amountID).value)/tick).toFixed(3)
+}
+function fillInRate(rateID,dluxID,amountID){
+    if(parseFloat(document.getElementById('buytotalsteem').value)*1000 > steembal){document.getElementById('buytotalsteem').value= parseFloat(steembal/1000).toFixed(3)}
+    if(parseFloat(document.getElementById('buytotalsbd').value)*1000 > sbdbal){document.getElementById('buytotalsbd').value = parseFloat(sbdbal.amount/1000).toFixed(3)}
+    if(parseFloat(document.getElementById('buyqtysbd').value)*1000 > bal){document.getElementById('sellqtysbd').value = parseFloat(bal).toFixed(3)}
+    if(parseFloat(document.getElementById('buyqtysteem').value)*1000 > bal){document.getElementById('sellqtysteem').value = parseFloat(bal).toFixed(3)}
+    document.getElementById(rateID).value = parseFloat(parseFloat(parseFloat(parseFloat(document.getElementById(amountID).value)/parseFloat(document.getElementById(dluxID).value)))).toFixed(5)
+    
+}
+function adjustDlux(amount,rateID,dluxID,amountID){
+    document.getElementById(amountID).value = parseFloat(amount/1000).toFixed(3)
+    if(parseFloat(document.getElementById('buytotalsteem').value)*1000 > steembal){document.getElementById('buytotalsteem').value= parseFloat(steembal/1000).toFixed(3)}
+    if(parseFloat(document.getElementById('buytotalsbd').value)*1000 > sbdbal){document.getElementById('buytotalsbd').value = parseFloat(sbdbal.amount/1000).toFixed(3)}
+    if(parseFloat(document.getElementById('buyqtysbd').value)*1000 > bal){document.getElementById('sellqtysbd').value = parseFloat(bal).toFixed(3)}
+    if(parseFloat(document.getElementById('buyqtysteem').value)*1000 > bal){document.getElementById('sellqtysteem').value = parseFloat(bal).toFixed(3)}
+    document.getElementById(dluxID).value = parseFloat(parseFloat(document.getElementById(amountID).value)/parseFloat(document.getElementById(rateID).value)).toFixed(3)
+}
+function fillInAmount(rateID,dluxID,amountID){
+    if(parseFloat(document.getElementById('buytotalsteem').value)*1000 > steembal){document.getElementById('buytotalsteem').value= parseFloat(steembal/1000).toFixed(3)}
+    if(parseFloat(document.getElementById('buytotalsbd').value)*1000 > sbdbal){document.getElementById('buytotalsbd').value = parseFloat(sbdbal.amount/1000).toFixed(3)}
+    if(parseFloat(document.getElementById('buyqtysbd').value)*1000 > bal){document.getElementById('sellqtysbd').value = parseFloat(bal).toFixed(3)}
+    if(parseFloat(document.getElementById('buyqtysteem').value)*1000 > bal){document.getElementById('sellqtysteem').value = parseFloat(bal).toFixed(3)}
+    document.getElementById(amountID).value = parseFloat(parseFloat(document.getElementById(dluxID).value)*parseFloat(document.getElementById(rateID).value)).toFixed(3)
+}
+function autoAmount(tick,rateID,dluxID,amountID){
+    document.getElementById(rateID).value = parseFloat(tick).toFixed(5)
+    if(parseFloat(document.getElementById('buytotalsteem').value)*1000 > steembal){document.getElementById('buytotalsteem').value= parseFloat(steembal/1000).toFixed(3)}
+    if(parseFloat(document.getElementById('buytotalsbd').value)*1000 > sbdbal){document.getElementById('buytotalsbd').value = parseFloat(sbdbal.amount/1000).toFixed(3)}
+    if(parseFloat(document.getElementById('buyqtysbd').value)*1000 > bal){document.getElementById('sellqtysbd').value = parseFloat(bal).toFixed(3)}
+    if(parseFloat(document.getElementById('buyqtysteem').value)*1000 > bal){document.getElementById('sellqtysteem').value = parseFloat(bal).toFixed(3)}
+    document.getElementById(amountID).value = parseFloat(parseFloat(document.getElementById(dluxID).value)*tick).toFixed(3)
+}
+
+function start(){
+  console.log(dex)
+  var feedItems = Object.keys(feed)
+  feedItems.reverse()
+  for(p=0;p<feedItems.length;p++){
+    if(feed[feedItems[p]].split('|')[1]!=' Report processed')addFeedRow(feedItems[p].split(':')[0],feed[feedItems[p]].split('|')[0],feed[feedItems[p]].split('|')[1],feedItems[p].split(':')[1])
+  }
+  steemTick =dex.markets.steem.tick
+  sbdTick = dex.markets.sbd.tick
+    document.getElementById('buypricesbd').value = parseFloat(sbdTick).toFixed(5)
+    document.getElementById('sellpricesbd').value = parseFloat(sbdTick).toFixed(5)
+    document.getElementById('buypricesteem').value = parseFloat(steemTick).toFixed(5)
+    document.getElementById('sellpricesteem').value = parseFloat(steemTick).toFixed(5)
+   var info = document.getElementsByClassName('text-center market-info-item')
+   var ip1 = parseFloat(stats.stats.tokenSupply/1000000 * dex.markets.steem.tick).toFixed(1),m='K'
+   var is1 = parseFloat(stats.stats.tokenSupply/1000000 * dex.markets.sbd.tick).toFixed(1),n='K'
+   if (ip1 > 1000){
+     ip1 = parseFloat(ip1/1000).toFixed(1)
+     m='M'}
+  if (ip1 > 1000){
+     ip1 = parseFloat(ip1/1000).toFixed(1)
+     m='B'}
+   info[0].innerHTML = `<h3><span>${ip1}${m} STEEM</span></h3>
+				<div>
+					<label>Market Cap</label>
+				</div>`
+   if (is1 > 1000){
+     is1 = parseFloat(is1/1000).toFixed(1)
+     n='M'}
+  if (is1 > 1000){
+     is1 = parseFloat(is1/1000).toFixed(1)
+     n='B'}
+   info[5].innerHTML = `<h3><span>${is1}${n} SBD</span></h3>
+				<div>
+					<label>Market Cap</label>
+				</div>`
+   var ip2 = parseFloat(stats.stats.tokenSupply/1000000000).toFixed(1),l='M'
+   
+  if(ip2>1000){ip3=parseFloat(ip3/1000).toFixed(1);l='B'}
+   info[2].innerHTML = `<h3><span>${ip2}${l} DLUX</span></h3>
+				<div>
+					<label>Supply</label>
+				</div>`
+   info[7].innerHTML = `<h3><span>${ip2}${l} DLUX</span></h3>
+				<div>
+					<label>Supply</label>
+				</div>`
+   var ip3 = 0,k=''
+   var until1 = 0
+   try{until1=dex.markets.steem.his.length}catch(e){}
+   for(i=0;i<until1;i++){
+     if(dex.markets.steem.his[i].block > dex.realtime - 28800)ip3 += dex.markets.steem.his[i].amount
+   }
+  ip3 = parseFloat(ip3/1000).toFixed(1)
+  if(ip3>1000){ip3=parseFloat(ip3/1000).toFixed(1);k='K'}
+  if(ip3>1000){ip3=parseFloat(ip3/1000).toFixed(1);k='M'}
+  if(ip3>1000){ip3=parseFloat(ip3/1000).toFixed(1);k='B'}
+   info[4].innerHTML = `<h3><span>${ip3}${k} STEEM</span></h3>
+				<div>
+					<label>Volume</label>
+				</div>`
+   var is3 = 0,o=''
+   var until2 = 0
+   try{until2=dex.markets.sbd.his.length}catch(e){}
+   for(var i = 0;i<until2;i++){
+     if(dex.markets.sbd.his[i].block > dex.realtime - 28800)is3 += dex.markets.sbd.his[i].amount
+   }
+  is3 = parseFloat(is3/1000).toFixed(1)
+  if(ip3>1000){is3=parseFloat(ip3/1000).toFixed(1);o='K'}
+  if(ip3>1000){is3=parseFloat(ip3/1000).toFixed(1);o='M'}
+  if(ip3>1000){is3=parseFloat(ip3/1000).toFixed(1);o='B'}
+   info[9].innerHTML = `<h3><span>${is3}${o} STEEM</span></h3>
+				<div>
+					<label>Volume</label>
+				</div>`
+  
+  for(var i = 0;i<until1;i++){
+    addHistRow(dex.markets.steem.his[i])
+  }
+  for(var i = 0;i<until2;i++){
+    const q = dex.markets.sbd.his[i].dir || '-'
+    addSbdHistRow(dex.markets.sbd.his[i].block,parseFloat(dex.markets.sbd.his[i].rate).toFixed(5),parseFloat(dex.markets.sbd.his[i].amount/1000).toFixed(3),q)
+  }
+  var c1=[],c2=[],c3=[],c4=[],c=0, until3=0, until4=0, until5=0, until6=0
+  try{
+    until3 = Object.keys(dex.markets.steem.sellOrders).length
+    console.log(`${until3} DLUX 4 STM sell orders`)
+  }catch(e){
+    console.log(e)
+  }
+  for(var i in dex.markets.steem.sellOrders){
+    const r1 = parseFloat(dex.markets.steem.sellOrders[i].steem/1000).toFixed(3)
+    const r2 = parseFloat(dex.markets.steem.sellOrders[i].amount/1000).toFixed(3)
+    const r3 = parseFloat(dex.markets.steem.sellOrders[i].rate).toFixed(6)
+    if(c1.length){c=parseFloat(c1[c1.length-1].y)}
+    c1.push({x:parseFloat(r3),y:parseFloat(r2+c)})
+    const r4 = dex.markets.steem.sellOrders[i].txid
+    const o = (dex.markets.steem.sellOrders[i].from==iam)
+    console.log(r1,r2,r3,r4,o,0)
+    addBuyRow(r1,r2,r3,r4,o)
+  }
+  c=0
+  for(var i in dex.markets.steem.buyOrders){
+    const r1 = parseFloat(dex.markets.steem.buyOrders[i].steem/1000).toFixed(3)
+    const r2 = parseFloat(dex.markets.steem.buyOrders[i].amount/1000).toFixed(3)
+    const r3 = parseFloat(dex.markets.steem.buyOrders[i].rate).toFixed(6)
+    if(c2.length){c=parseFloat(c2[0].y)}
+    c2.unshift({x:parseFloat(r3),y:parseFloat(parseFloat(r2)+parseFloat(c))})
+    const r4 = dex.markets.steem.buyOrders[i].txid
+     const o = (dex.markets.steem.buyOrders[i].from==iam)
+    addSellRow(r1,r2,r3,r4,o)
+  }
+  c=0
+  for(var i in dex.markets.sbd.sellOrders){
+    const r1 = parseFloat(dex.markets.sbd.sellOrders[i].sbd/1000).toFixed(3)
+    const r2 = parseFloat(dex.markets.sbd.sellOrders[i].amount/1000).toFixed(3)
+    const r3 = parseFloat(dex.markets.sbd.sellOrders[i].rate).toFixed(6)
+    if(c3.length){c=parseFloat(c3[c3.length-1].y)}
+    c3.push({x:r3,y:parseFloat(r2+c)})
+    const r4 = dex.markets.sbd.sellOrders[i].txid
+    const o = (dex.markets.sbd.sellOrders[i].from==iam)
+    addSbdBuyRow(r1,r2,r3,r4,o)
+  }
+  c=0
+  for(var i in dex.markets.sbd.buyOrders){
+    const r1 = parseFloat(dex.markets.sbd.buyOrders[i].sbd/1000).toFixed(3)
+    const r2 = parseFloat(dex.markets.sbd.buyOrders[i].amount/1000).toFixed(3)
+    const r3 = parseFloat(dex.markets.sbd.buyOrders[i].rate).toFixed(6)
+    if(c4.length){c=parseFloat(c4[0].y)}
+    c4.unshift({x:r3,y:parseFloat(r2+c)})
+    const r4 = dex.markets.sbd.buyOrders[i].txid
+    const o = (dex.markets.sbd.buyOrders[i].from==iam)
+    addSbdSellRow(r1,r2,r3,r4,o)
+  }
+  //c1.unshift({x:c2[0].x,y:0})
+  //c2.push({s:c1[c1.length-1].x,y:0})
+  //c3.unshift({x:c4[0].x,y:0})
+  //c4.push({s:c3[c3.length-1].x,y:0})
+    updateConfigByMutating(priceChartSteem)
+    updateSBDConfigByMutating(priceChartSbd)
+    updateSteemConfigByMutating(buySellChartSteem)
+    updateSBDBookConfigByMutating(buySellChartSbd)
+ function updateSteemConfigByMutating(chart) {
+    chart.data.datasets[0].data = c1
+    chart.data.datasets[1].data = c2
+    chart.update();
+  } 
+  function updateSBDBookConfigByMutating(chart) {
+    chart.data.datasets[0].data = c3
+    chart.data.datasets[1].data = c4
+    chart.update();
+  }
+  
+function updateConfigByMutating(chart) {
+    for(var i = 0 ;i < until1;i++){
+      var color = "rgba(100,100,100,0.6)"
+      var bcolor = "rgba(100,100,100,0.2)"
+      if(dex.markets.steem.his[i].dir == 'up'){ 
+        color = "rgba(0,255,0,0.6)";
+        bcolor = "rgba(0,255,0,0.2)"
+      }
+      if(dex.markets.steem.his[i].dir == 'down'){
+        color = "rgba(255,0,0,0.6)";
+        bcolor = "rgba(255,0,0,0.2)"
+      }
+      steemHis.push({
+          backgroundColor: bcolor,
+          borderColor: color,
+          data: [{
+            x: dex.markets.steem.his[i].block,
+            y: parseFloat(dex.markets.steem.his[i].rate),
+            r: Math.sqrt(parseFloat(dex.markets.steem.his[i].amount/1000)/3.14)
+          }]
+      })
+    }
+    chart.data.datasets[0] = steemHis
+    chart.options.title.text = `DLUX : ${parseFloat(steemTick).toFixed(3)} STEEM`;
+    chart.update();
+  }
+  
+  function updateSBDConfigByMutating(chart) {
+    for(var i = 0 ;i < until2;i++){
+      var color = "rgba(100,100,100,0.6)"
+      var bcolor = "rgba(100,100,100,0.2)"
+      if(dex.markets.sbd.his[i].dir == 'up'){ 
+        color = "rgba(0,255,0,0.6)";
+        bcolor = "rgba(0,255,0,0.2)"
+      }
+      if(dex.markets.sbd.his[i].dir == 'down'){
+        color = "rgba(255,0,0,0.6)";
+        bcolor = "rgba(255,0,0,0.2)"
+      }
+      sbdHis.push({
+          backgroundColor: bcolor,
+          borderColor: color,
+          data: [{
+            x: dex.markets.sbd.his[i].block,
+            y: parseFloat(dex.markets.sbd.his[i].rate),
+            r: Math.sqrt(parseFloat(dex.markets.sbd.his[i].amount/1000)/3.14)
+          }]
+      })
+    }
+    chart.data.datasets[0] = sbdHis
+    chart.options.title.text = `DLUX : ${parseFloat(sbdTick).toFixed(3)} SBD`;
+    chart.update();
+    }
+  
+function addHistRow(ip)
+{
+  const content =ip.block,morecontent=parseFloat(ip.rate).toFixed(5),morecontent2=parseFloat(ip.amount/1000).toFixed(3),morecontent3=ip.dir||'-'
+         var histTab = document.getElementsByClassName('history-table').item(0)
+         var tabBody=histTab.getElementsByTagName("tbody").item(0);
+         var row=document.createElement("tr");
+         var cell1 = document.createElement("td");
+         var cell2 = document.createElement("td");
+         var cell3 = document.createElement("td"); 
+         var cell4 = document.createElement("td");
+         const textnode1=document.createTextNode(content);
+         const textnode2=document.createTextNode(morecontent);
+         const textnode3=document.createTextNode(morecontent2);
+         const textnode4=document.createTextNode(morecontent3);
+         cell1.appendChild(textnode1);
+         cell2.appendChild(textnode2);
+         cell3.appendChild(textnode3);
+         cell4.appendChild(textnode4);
+         row.appendChild(cell1);
+         row.appendChild(cell2);
+         row.appendChild(cell3);
+         row.appendChild(cell4);
+         tabBody.appendChild(row);
+
+
+}
+  
+function addSbdHistRow(content,morecontent,morecontent2,morecontent3)
+{
+         var histTab = document.getElementsByClassName('history-table').item(1)
+         var tabBody=histTab.getElementsByTagName("tbody").item(0);
+         var row=document.createElement("tr");
+         var cell1 = document.createElement("td");
+         var cell2 = document.createElement("td");
+         var cell3 = document.createElement("td"); 
+         var cell4 = document.createElement("td");
+         const textnode1=document.createTextNode(content);
+         const textnode2=document.createTextNode(morecontent);
+         const textnode3=document.createTextNode(morecontent2);
+         const textnode4=document.createTextNode(morecontent3);
+         cell1.appendChild(textnode1);
+         cell2.appendChild(textnode2);
+         cell3.appendChild(textnode3);
+         cell4.appendChild(textnode4);
+         row.appendChild(cell1);
+         row.appendChild(cell2);
+         row.appendChild(cell3);
+         row.appendChild(cell4);
+         tabBody.appendChild(row);
+
+
+}
+  
+function addBuyRow(content,morecontent,morecontent2,morecontent3,o)
+{
+         var orders = document.getElementsByClassName('container orderbook-table').item(0)
+         var tabBody= orders.getElementsByTagName("tbody").item(1);
+         var row=document.createElement("tr");
+         var cell1 = document.createElement("td");
+         var cell2 = document.createElement("td");
+         var cell3 = document.createElement("td"); 
+         var cell4 = document.createElement("td");
+         const textnode1=document.createTextNode(content);
+         const textnode2=document.createTextNode(morecontent);
+         const textnode3=document.createTextNode(morecontent2);
+         const button=document.createElement("button");
+  if(o){
+          button.innerHTML="Cancel"
+         button.setAttribute("onclick", `cancel('${morecontent2}:${morecontent3}')`)
+         button.setAttribute('class','btn btn-outline-warning btn-sm')
+          } else{
+         button.innerHTML="Buy"
+         button.setAttribute("onclick", `getItID('${morecontent2}:${morecontent3}')`)
+         button.setAttribute('class','btn btn-outline-success btn-sm')
+          }
+         cell1.appendChild(textnode1);
+         cell2.appendChild(textnode2);
+         cell3.appendChild(textnode3);
+         cell4.appendChild(button);
+         row.appendChild(cell1);
+         row.appendChild(cell2);
+         row.appendChild(cell3);
+         row.appendChild(cell4);
+         tabBody.appendChild(row);
+
+
+}
+  function addSbdBuyRow(content,morecontent,morecontent2,morecontent3,o)
+{
+         var orders = document.getElementsByClassName('container orderbook-table').item(1)
+         var tabBody= orders.getElementsByTagName("tbody").item(1);
+         var row=document.createElement("tr");
+         var cell1 = document.createElement("td");
+         var cell2 = document.createElement("td");
+         var cell3 = document.createElement("td"); 
+         var cell4 = document.createElement("td");
+         const textnode1=document.createTextNode(content);
+         const textnode2=document.createTextNode(morecontent);
+         const textnode3=document.createTextNode(morecontent2);
+         const button=document.createElement("button");
+  if(o){
+          button.innerHTML="Cancel"
+         button.setAttribute("onclick", `cancel('${morecontent2}:${morecontent3}')`)
+         button.setAttribute('class','btn btn-outline-warning btn-sm')
+          } else{
+         button.innerHTML="Buy"
+         button.setAttribute("onclick", `getItID('${morecontent2}:${morecontent3}')`)
+         button.setAttribute('class','btn btn-outline-success btn-sm')
+          }
+         cell1.appendChild(textnode1);
+         cell2.appendChild(textnode2);
+         cell3.appendChild(textnode3);
+         cell4.appendChild(button);
+         row.appendChild(cell1);
+         row.appendChild(cell2);
+         row.appendChild(cell3);
+         row.appendChild(cell4);
+         tabBody.appendChild(row);
+
+
+}
+  
+  function addSellRow(content,morecontent,morecontent2,morecontent3,o)
+{
+         var orders = document.getElementsByClassName('container orderbook-table').item(0)
+         var tabBody= orders.getElementsByTagName("tbody").item(0);
+  console.log(orders.getElementsByTagName("tbody"))
+         var row=document.createElement("tr");
+         var cell1 = document.createElement("td");
+         var cell2 = document.createElement("td");
+         var cell3 = document.createElement("td"); 
+         var cell4 = document.createElement("td");
+         const textnode1=document.createTextNode(content);
+         const textnode2=document.createTextNode(morecontent);
+         const textnode3=document.createTextNode(morecontent2);
+         const button=document.createElement("button");
+  if(o){
+          button.innerHTML="Cancel"
+         button.setAttribute("onclick", `cancel('${morecontent2}:${morecontent3}')`)
+         button.setAttribute('class','btn btn-outline-warning btn-sm')
+          } else{
+         button.innerHTML="Sell"
+         button.setAttribute("onclick", `getSellID('${morecontent2}:${morecontent3}')`)
+         button.setAttribute('class','btn btn-outline-danger btn-sm')
+          }
+         cell1.appendChild(textnode1);
+         cell2.appendChild(textnode2);
+         cell3.appendChild(textnode3);
+         cell4.appendChild(button);
+         row.appendChild(cell1);
+         row.appendChild(cell2);
+         row.appendChild(cell3);
+         row.appendChild(cell4);
+         tabBody.appendChild(row);
+
+
+}
+  function addSbdSellRow(content,morecontent,morecontent2,morecontent3,o)
+{
+         var orders = document.getElementsByClassName('container orderbook-table').item(1)
+         var tabBody= orders.getElementsByTagName("tbody").item(0);
+  console.log(orders.getElementsByTagName("tbody"))
+         var row=document.createElement("tr");
+         var cell1 = document.createElement("td");
+         var cell2 = document.createElement("td");
+         var cell3 = document.createElement("td"); 
+         var cell4 = document.createElement("td");
+         const textnode1=document.createTextNode(content);
+         const textnode2=document.createTextNode(morecontent);
+         const textnode3=document.createTextNode(morecontent2);
+         const button=document.createElement("button");
+          if(o){
+          button.innerHTML="Cancel"
+         button.setAttribute("onclick", `cancel('${morecontent2}:${morecontent3}')`)
+         button.setAttribute('class','btn btn-outline-warning btn-sm')
+          } else{
+         button.innerHTML="Sell"
+         button.setAttribute("onclick", `getSellID('${morecontent2}:${morecontent3}')`)
+         button.setAttribute('class','btn btn-outline-danger btn-sm')
+          }
+         cell1.appendChild(textnode1);
+         cell2.appendChild(textnode2);
+         cell3.appendChild(textnode3);
+         cell4.appendChild(button);
+         row.appendChild(cell1);
+         row.appendChild(cell2);
+         row.appendChild(cell3);
+         row.appendChild(cell4);
+         tabBody.appendChild(row);
+
+
+}
+  function addFeedRow(a,b,c,d)
+{
+         var histTab = document.getElementsByClassName('feed-table').item(0)
+         var tabBody=histTab.getElementsByTagName("tbody").item(0);
+         var row=document.createElement("tr");
+         var cell1 = document.createElement("td");
+         var cell2 = document.createElement("td");
+         var cell3 = document.createElement("td"); 
+         var cell4 = document.createElement("td");
+         const textnode1=document.createTextNode(a);
+         const textnode2=document.createTextNode(b);
+         const textnode3=document.createTextNode(c);
+         const textnode4=document.createTextNode(d);
+         cell1.appendChild(textnode1);
+         cell2.appendChild(textnode2);
+         cell3.appendChild(textnode3);
+         cell4.appendChild(textnode4);
+         row.appendChild(cell1);
+         row.appendChild(cell2);
+         row.appendChild(cell3);
+         row.appendChild(cell4);
+         tabBody.appendChild(row);
+
+
+}
+}
+  function cancel(txid){
+    var params = {
+    "required_auths": [iam],
+    "required_posting_auths": 0,
+    "id": "dlux_dex_clear",
+    "json": JSON.stringify({
+                txid
+            })
+    } 
+    console.log(params)
+    reqsign(['custom_json', params],['posting',iam])
+    }
+  
+
+  
+  function placeSteemAsk(){
+    var dlux = parseInt(parseFloat(document.getElementById('sellqtysteem').value)*1000),
+        amount = parseInt(parseFloat(document.getElementById('selltotalsteem').value)*1000),
+        params = {
+    "required_auths": [iam],
+    "required_posting_auths": 0,
+    "id": "dlux_dex_steem_sell",
+    "json": JSON.stringify({
+                dlux,
+                steem: amount
+            })
+    } 
+    console.log(params)
+    reqsign(['custom_json', params],['active',iam])
+    }
+  function placeSbdAsk(){
+    var dlux = parseInt(parseFloat(document.getElementById('sellqtysbd').value)*1000),
+        amount = parseInt(parseFloat(document.getElementById('selltotalsbd').value)*1000),
+        params = {
+    "required_auths": [iam],
+    "required_posting_auths": 0,
+    "id": "dlux_dex_sbd_sell",
+    "json": JSON.stringify({
+                dlux,
+                sbd: amount
+            })
+    } 
+    console.log(params)
+    reqsign(['custom_json', params],['posting',iam])
+    }
+  
+  function placeSteemBuy(){
+    var dlux = parseInt(parseFloat(document.getElementById('buyqtysteem').value)*1000),
+        amount = parseInt(parseFloat(document.getElementById('buytotalsteem').value)*1000),
+        steemAmount = (amount / 1000).toFixed(3) + ' STEEM', sbdAmount = '0.000 SBD'
+    fetch('https://token.dlux.io/dex')
+            .then(function(response) {
+              return response.json();
+            })
+            .then(function(myJson) {
+              var updex = myJson.markets
+              var queue = myJson.queue
+            if (dlux > 0 && typeof dlux == 'number' && amount > 0 && typeof amount == 'number') {
+                var escrowTimer = {}
+                var agents = []
+                var i = 0
+                for (var agent in queue) {
+                    if (agents.length == 1) {
+                        break;
+                    }
+                    if (queue[agent] != iam) {
+                        agents.push(queue[agent])
+                    }
+                }
+                for (var agent in queue) {
+                    if (agents.length == 2) {
+                        break
+                    }
+                    if (queue[agent] != agents[0] && queue[agent] != iam) {
+                        agents.push(queue[agent])
+                    }
+                }
+                let now = new Date();
+                escrowTimer.ratifyIn = now.setHours(now.getHours() + 72);
+                escrowTimer.ratifyUTC = new Date(escrowTimer.ratifyIn);
+                escrowTimer.ratifyString = escrowTimer.ratifyUTC.toISOString().slice(0, -5);
+                escrowTimer.expiryIn = now.setDate(now.getDate() + 5);
+                escrowTimer.expiryUTC = new Date(escrowTimer.expiryIn);
+                escrowTimer.expiryString = escrowTimer.expiryUTC.toISOString().slice(0, -5);
+                var formatter = amount / 1000
+                formatter = formatter.toFixed(3)
+                var eidi = Math.floor(Math.random()*4294967296)
+                let params = {
+                    from: iam,
+                    to: agents[0],
+                    sbd_amount: sbdAmount,
+                    steem_amount: steemAmount,
+                    escrow_id: eidi,
+                    agent: agents[1],
+                    fee: '0.000 STEEM',
+                    ratification_deadline: escrowTimer.ratifyString,
+                    escrow_expiration: escrowTimer.expiryString,
+                    json_meta: JSON.stringify({
+                        dextx: {
+                            dlux
+                        }
+                    })
+                }
+            console.log(params)
+            reqsign(['escrow_transfer', params],['active',iam])
+            }         
+    }) 
+              
+              
+    }
+  
+  
+  function placeSbdBuy(){
+    var dlux = parseInt(parseFloat(document.getElementById('buyqtysbd').value)*1000),
+        amount = parseInt(parseFloat(document.getElementById('buytotalsbd').value)*1000),
+        steemAmount = '0.000 STEEM', sbdAmount = (amount / 1000).toFixed(3) + ' SBD'
+    fetch('https://token.dlux.io/dex')
+            .then(function(response) {
+              return response.json();
+            })
+            .then(function(myJson) {
+              var updex = myJson.markets
+              var queue = myJson.queue
+            if (dlux > 0 && typeof dlux == 'number' && amount > 0 && typeof amount == 'number') {
+                var escrowTimer = {}
+                var agents = []
+                var i = 0
+                for (var agent in queue) {
+                    if (agents.length == 1) {
+                        break;
+                    }
+                    if (queue[agent] != iam) {
+                        agents.push(queue[agent])
+                    }
+                }
+                for (var agent in queue) {
+                    if (agents.length == 2) {
+                        break
+                    }
+                    if (queue[agent] != agents[0] && queue[agent] != iam) {
+                        agents.push(queue[agent])
+                    }
+                }
+                let now = new Date();
+                escrowTimer.ratifyIn = now.setHours(now.getHours() + 72);
+                escrowTimer.ratifyUTC = new Date(escrowTimer.ratifyIn);
+                escrowTimer.ratifyString = escrowTimer.ratifyUTC.toISOString().slice(0, -5);
+                escrowTimer.expiryIn = now.setDate(now.getDate() + 144);
+                escrowTimer.expiryUTC = new Date(escrowTimer.expiryIn);
+                escrowTimer.expiryString = escrowTimer.expiryUTC.toISOString().slice(0, -5);
+                var formatter = amount / 1000
+                formatter = formatter.toFixed(3)
+               var eid = Math.floor(Math.random()*4294967296)
+                let params = {
+                    from: iam,
+                    to: agents[0],
+                    sbd_amount: sbdAmount,
+                    steem_amount: steemAmount,
+                    escrow_id: eid,
+                    agent: agents[1],
+                    fee: '0.000 STEEM',
+                    ratification_deadline: escrowTimer.ratifyString,
+                    escrow_expiration: escrowTimer.expiryString,
+                    json_meta: JSON.stringify({
+                        dextx: {
+                            dlux
+                        }
+                    })
+                }
+            console.log(params)
+            reqsign(['escrow_transfer', params],['active',iam])
+            }         
+    }) 
+              
+              
+    }
+  
+  function placeSteemBuy1(){
+             
+            var amount = parseInt(parseFloat(document.getElementById('buytotalsteem').value)*1000),
+                dlux = parseInt(parseFloat(document.getElementById('buyqtysteem').value)*1000),
+                steemAmount=`${(amount/1000).toFixed(3)} STEEM`, sbdAmount='0.000 SBD'
+            fetch('https://token.dlux.io/dex')
+            .then(function(response) {
+              return response.json();
+            })
+            .then(function(myJson) {
+              var updex = myJson.markets
+              var queue = myJson.queue
+              if (dlux > 0 && typeof dlux == 'number' && amount > 0 && typeof amount == 'number') {
+                var escrowTimer = {}
+                var agents = []
+                var i = 0
+                for (var agent in queue) {
+                    if (agents.length == 1) {
+                        break;
+                    }
+                    if (/*state.balances[queue[agent]] > dlux && */ queue[agent] != iam) {
+                        agents.push(queue[agent])
+                    }
+                }
+                for (var agent in queue) {
+                    if (agents.length == 2) {
+                        break
+                    }
+                    if (queue[agent] != agents[0] && queue[agent] != iam) {
+                        agents.push(queue[agent])
+                    }
+                }
+                let now = new Date();
+                escrowTimer.ratifyIn = now.setHours(now.getHours() + 72);
+                escrowTimer.ratifyUTC = new Date(escrowTimer.ratifyIn);
+                escrowTimer.ratifyString = escrowTimer.ratifyUTC.toISOString().slice(0, -5);
+                escrowTimer.expiryIn = now.setDate(now.getDate() + 144);
+                escrowTimer.expiryUTC = new Date(escrowTimer.expiryIn);
+                escrowTimer.expiryString = escrowTimer.expiryUTC.toISOString().slice(0, -5);
+                var formatter = amount / 1000
+                formatter = formatter.toFixed(3)
+                var eidi = Math.floor(Math.random()*4294967296)
+                let params = {
+                    from: iam,
+                    to: agents[0],
+                    sbd_amount: sbdAmount,
+                    steem_amount: steemAmount,
+                    escrow_id: eidi,
+                    agent: agents[1],
+                    fee: '0.000 STEEM',
+                    ratification_deadline: escrowTimer.ratifyString,
+                    escrow_expiration: escrowTimer.expiryString,
+                    json_meta: JSON.stringify({
+                        dextx: {
+                            dlux
+                        }
+                    })
+                }
+                console.log(params)
+                reqsign(['escrow_transfer', params],['active',iam])
+                
+            }
+            })
+  }
+  
+  
+  function getItID(txid){
+fetch('https://token.dlux.io/dex')
+  .then(function(response) {
+    return response.json();
+  })
+  .then(function(myJson) {
+    var updex = myJson.markets
+    var queue = myJson.queue
+    var addr = '',receiver = '',amount, type
+                if (updex.steem.sellOrders[txid]) {
+                    console.log(updex.steem.sellOrders[txid].txid)
+                    addr = updex.steem.sellOrders[txid]
+                    reciever = updex.steem.sellOrders[txid].from
+                    type = ' STEEM'
+                }
+            if (!addr) {
+                type = ' SBD'
+                    if (updex.sbd.sellOrders[txid]) {
+                        console.log(updex.sbd.sellOrders[txid].txid)
+                        addr = updex.sbd.sellOrders[txid]
+                        reciever = updex.sbd.sellOrders[txid].from
+                    }
+            }
+            if (addr) {
+                var escrowTimer = {}
+                var agents = []
+                console.log(addr, iam)
+                for (var agent in queue) {
+                    if (queue[agent] !== addr.from && queue[agent] !== iam) {
+                     agents.push(queue[agent])   
+                    }
+                }
+                let now = new Date();
+                escrowTimer.ratifyIn = now.setHours(now.getHours() + 120);
+                escrowTimer.ratifyUTC = new Date(escrowTimer.ratifyIn);
+                escrowTimer.ratifyString = escrowTimer.ratifyUTC.toISOString().slice(0, -5);
+                escrowTimer.expiryIn = now.setDate(now.getDate() + 10);
+                escrowTimer.expiryUTC = new Date(escrowTimer.expiryIn);
+                escrowTimer.expiryString = escrowTimer.expiryUTC.toISOString().slice(0, -5);
+                var eidi = Math.floor(Math.random()*4294967296)
+                if (type === ' STEEM') {
+                    steemAmount = `${parseFloat(addr.steem/1000).toFixed(3)} STEEM`
+                    sbdAmount = '0.000 SBD'
+                } else if (type === ' SBD') {
+                    sbdAmount = `${parseFloat(addr.sbd/1000).toFixed(3)} SBD`
+                    steemAmount = '0.000 STEEM'
+                }
+                let eid = parseInt(Math.random()*1000000000) //escrow_id from DLUXQmxxxx<this
+                let params = {
+                    from: iam,
+                    to: agents[0],
+                    sbd_amount: sbdAmount,
+                    steem_amount: steemAmount,
+                    escrow_id: eid,
+                    agent: agents[1],
+                    fee: '0.000 STEEM',
+                    ratification_deadline: escrowTimer.ratifyString,
+                    escrow_expiration: escrowTimer.expiryString,
+                    json_meta: JSON.stringify({
+                        contract: txid,
+                        for: addr.from
+                    })
+                }
+                /*
+                escrow_transfer(prompt('Enter Active Key','5blahblah'), iam, agents[0], agents[1], eid, sbdAmount, steemAmount, "0.000 STEEM", escrowTimer.ratifyString, escrowTimer.expiryString, JSON.stringify({
+                        contract: txid,
+                        for: addr.from
+                    }))
+              */
+                reqsign(['escrow_transfer', params],['active',iam]);
+            }
+  });
+}
+  function getSellID(txid){
+fetch('https://token.dlux.io/dex')
+  .then(function(response) {
+    return response.json();
+  })
+  .then(function(myJson) {
+    var updex = myJson.markets
+    var addr = ' ',receiver = '',amount, type
+    var type = '', addr = '', reciever = ''
+    console.log(`Buying ${txid}`,updex)
+    for (var i in updex.steem.buyOrders) {
+        if (updex.steem.buyOrders[i].txid == txid.split(':')[1]) {
+            console.log(updex.steem.buyOrders[i].txid)
+            addr = updex.steem.buyOrders[i]
+            receiver = updex.steem.buyOrders[i].from
+            type = ' STEEM'
+        }
+    }
+  console.log({addr, receiver})
+    if (!type) {
+          for (var i in updex.sbd.buyOrders.length) {
+              if (updex.sbd.buyOrders[i].txid == txid) {
+                  console.log(updex.sbd.buyOrders[i].txid)
+                  addr = updex.sbd.buyOrders[i]
+                  receiver = updex.sbd.buyOrders[i].from
+                  type = ' SBD'
+              }
+          }
+      }
+    if (type) {
+      var u = `${parseFloat(updex.steem.buyOrders[i].amount/1000).toFixed(3)} DLUX`
+      var params = {
+    "required_auths": [iam],
+    "required_posting_auths": [],
+    "id": "dlux_dex_buy",
+    "json": JSON.stringify({
+                    contract: txid,
+                    for: receiver,
+                    dlux: u
+                })
+    } 
+    console.log(params)
+    reqsign(['custom_json', params],['active',iam]);
+    }
+  });
+}
+  </script>
+</body>
+</html>

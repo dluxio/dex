@@ -1,0 +1,27 @@
+0 info it worked if it ends with ok
+1 verbose cli [ '/opt/nvm/versions/node/v6.16.0/bin/node',
+1 verbose cli   '/opt/nvm/versions/node/v6/bin/npm-real',
+1 verbose cli   'prune' ]
+2 info using npm@3.10.10
+3 info using node@v6.16.0
+4 verbose config Skipping project config: /app/.npmrc. (matches userconfig)
+5 verbose stack Error: Invalid name: "dlux starter pack"
+5 verbose stack     at ensureValidName (/opt/nvm/versions/node/v6.16.0/lib/node_modules/npm/node_modules/normalize-package-data/lib/fixer.js:336:15)
+5 verbose stack     at Object.fixNameField (/opt/nvm/versions/node/v6.16.0/lib/node_modules/npm/node_modules/normalize-package-data/lib/fixer.js:215:5)
+5 verbose stack     at /opt/nvm/versions/node/v6.16.0/lib/node_modules/npm/node_modules/normalize-package-data/lib/normalize.js:32:38
+5 verbose stack     at Array.forEach (native)
+5 verbose stack     at normalize (/opt/nvm/versions/node/v6.16.0/lib/node_modules/npm/node_modules/normalize-package-data/lib/normalize.js:31:15)
+5 verbose stack     at final (/opt/nvm/versions/node/v6.16.0/lib/node_modules/npm/node_modules/read-package-json/read-json.js:349:5)
+5 verbose stack     at then (/opt/nvm/versions/node/v6.16.0/lib/node_modules/npm/node_modules/read-package-json/read-json.js:124:5)
+5 verbose stack     at /opt/nvm/versions/node/v6.16.0/lib/node_modules/npm/node_modules/read-package-json/read-json.js:311:12
+5 verbose stack     at /opt/nvm/versions/node/v6.16.0/lib/node_modules/npm/node_modules/graceful-fs/graceful-fs.js:78:16
+5 verbose stack     at tryToString (fs.js:457:3)
+6 verbose cwd /app
+7 error Linux 4.4.0-1066-aws
+8 error argv "/opt/nvm/versions/node/v6.16.0/bin/node" "/opt/nvm/versions/node/v6/bin/npm-real" "prune"
+9 error node v6.16.0
+10 error npm  v3.10.10
+11 error Invalid name: "dlux starter pack"
+12 error If you need help, you may report this error at:
+12 error     <https://github.com/npm/npm/issues>
+13 verbose exit [ 1, true ]

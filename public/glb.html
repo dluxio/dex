@@ -1,0 +1,68 @@
+<html>
+	<head>
+		<title>GLB Packer</title>
+		<link href="https://fonts.googleapis.com/css?family=Open+Sans:400,800" rel="stylesheet">
+		<link rel="stylesheet" href="/style.css">
+		<script src="js/index.js" async ></script>
+    <script src="https://unpkg.com/ipfs-http-client@29.1.1/dist/index.min.js"></script>
+    <script>
+    function saveToIpfs(blob, options){
+    var pin = options[0]
+    var navMesh = options[1]
+    var path = options[2]
+    var assetHash = ''
+    var static = options[3]
+    if(navMesh)path='navmesh.glb'
+    const ipfs = window.IpfsHttpClient({ host: 'ipfs.infura.io', port: '5001', protocol: 'https' });
+    const ipfsIP = [{'path':path,'content':blob}]
+    ipfs.add(ipfsIP, (err, ipfsReturn) => {
+            if (!err){
+              var pass = localStorage.getItem('pass')
+              if (!pass){
+              pass = alert('enter the edit password', 'set this in .env')
+                localStorage.setItem('pass', pass)
+              }
+              fetch(`/glb/${pass}`, {
+                method: 'POST',
+                headers: {
+            "Content-Type": "application/json",
+            // "Content-Type": "application/x-www-form-urlencoded",
+        },
+                body: JSON.stringify({customJson:{assets:[{asset:ipfsReturn[0],pin:pin,static:static}]}})
+              })
+              .then(response => response.text())
+              .then(response => console.log(`Inserted ${assetHash}`))
+              .catch(error => console.error('Error:', error));
+            } else {
+        console.log('IPFS Upload Failed')}
+          })
+    }
+    </script>
+	</head>
+	<body>
+		<div class="message">
+			<h1>GLTF to "forget about it"</h1>
+      <h3>GLTF to GLB to IPFS to Manifest to VRUI</h3>
+			Drop a glTF and its associated .bin file and textures here
+			<div class="option">
+				<input type="checkbox" id="convertpng" />Convert PNG to JPEG (beta)
+			</div>
+      <div class="option">
+				<input type="checkbox" id="makeunlit" />Convert to KHR_materials_unlit
+			</div>
+      <div class="option">
+				<input type="checkbox" id="pinthis" checked />Request to pin asset upon post.
+			</div>
+      <div class="option">
+				<input type="checkbox" id="static" checked />This is a Static Body (Include in Navmesh)
+			</div>
+      <div class="option">
+				<input type="checkbox" id="nav" />This is my Navmesh (<a href="https://github.com/dluxio/dluxio/wiki/Navmesh" target="_blank">Learn More</a>)
+			</div>
+		</div>
+		<div class="attribution">
+			<div class="twitter-logo"></div>
+			<a href="https://twitter.com/dluxxr" target="_blank">@dluxxr</a>
+		</div>
+	</body>
+</html>
